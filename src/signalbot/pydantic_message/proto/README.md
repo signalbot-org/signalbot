@@ -13,3 +13,5 @@ Regenerate the files with
 ```bash
 uv run python -m grpc.tools.protoc -I . --python_betterproto2_opt=pydantic_dataclasses --python_betterproto2_out=lib ./SignalService.proto
 ```
+
+THE MESSAGES ARE NOT ACTUALLY DEFINED THERE BUT IN EACH CLASS IN https://github.com/AsamK/signal-cli/blob/master/src/main/java/org/asamk/signal/json
