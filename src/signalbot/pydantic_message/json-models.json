@@ -125,7 +125,10 @@
                     "data": {
                         "type": "string"
                     }
-                }
+                },
+                "required": [
+                    "data"
+                ]
             },
             "Busy": {
                 "type": "object",
@@ -220,7 +223,26 @@
                     "internal": {
                         "$ref": "#/components/schemas/Internal"
                     }
-                }
+                },
+                "required": [
+                    "color",
+                    "familyName",
+                    "givenName",
+                    "isBlocked",
+                    "isHidden",
+                    "messageExpirationTime",
+                    "name",
+                    "nickFamilyName",
+                    "nickGivenName",
+                    "nickName",
+                    "note",
+                    "number",
+                    "profile",
+                    "profileSharing",
+                    "unregistered",
+                    "username",
+                    "uuid"
+                ]
             },
             "ContactAddress": {
                 "type": "object",
@@ -470,7 +492,11 @@
                     "type": {
                         "type": "string"
                     }
-                }
+                },
+                "required": [
+                    "message",
+                    "type"
+                ]
             },
             "Gradient": {
                 "type": "object",
@@ -586,7 +612,13 @@
                     "discoverableByPhonenumber": {
                         "type": "boolean"
                     }
-                }
+                },
+                "required": [
+                    "capabilities",
+                    "discoverableByPhonenumber",
+                    "sharesPhoneNumber",
+                    "unidentifiedAccessMode"
+                ]
             },
             "Mention": {
                 "type": "object",
@@ -671,7 +703,17 @@
                     "typingMessage": {
                         "$ref": "#/components/schemas/TypingMessage"
                     }
-                }
+                },
+                "required": [
+                    "serverDeliveredTimestamp",
+                    "serverReceivedTimestamp",
+                    "source",
+                    "sourceDevice",
+                    "sourceName",
+                    "sourceNumber",
+                    "sourceUuid",
+                    "timestamp"
+                ]
             },
             "Offer": {
                 "type": "object",
@@ -859,7 +901,16 @@
                     "mobileCoinAddress": {
                         "type": "string"
                     }
-                }
+                },
+                "required": [
+                    "about",
+                    "aboutEmoji",
+                    "familyName",
+                    "givenName",
+                    "hasAvatar",
+                    "lastUpdateTimestamp",
+                    "mobileCoinAddress"
+                ]
             },
             "Quote": {
                 "type": "object",
@@ -1471,7 +1522,13 @@
                         "type": "integer",
                         "format": "int64"
                     }
-                }
+                },
+                "required": [
+                    "sender",
+                    "senderNumber",
+                    "senderUuid",
+                    "timestamp"
+                ]
             },
             "SyncStoryMessage": {
                 "type": "object",
@@ -1566,7 +1623,11 @@
                     "groupId": {
                         "type": "string"
                     }
-                }
+                },
+                "required": [
+                    "action",
+                    "timestamp"
+                ]
             },
             "UnpinMessage": {
                 "type": "object",
