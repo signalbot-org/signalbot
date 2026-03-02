@@ -1,0 +1,1598 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "signal-cli JSON Models",
+        "version": "v1"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Generated server url"
+        }
+    ],
+    "paths": {
+        "/openapi/json/models": {
+            "get": {
+                "tags": [
+                    "json-open-api-controller"
+                ],
+                "summary": "Signal JSON model schema catalog",
+                "operationId": "getModels",
+                "responses": {
+                    "200": {
+                        "description": "Catalog of Signal JSON model schemas",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/SchemaCatalog"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "AdminDelete": {
+                "type": "object",
+                "properties": {
+                    "targetAuthor": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "targetAuthorNumber": {
+                        "type": "string"
+                    },
+                    "targetAuthorUuid": {
+                        "type": "string"
+                    },
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "targetAuthor",
+                    "targetAuthorNumber",
+                    "targetAuthorUuid",
+                    "targetSentTimestamp"
+                ]
+            },
+            "Answer": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "opaque": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "opaque"
+                ]
+            },
+            "Attachment": {
+                "type": "object",
+                "properties": {
+                    "contentType": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "id": {
+                        "type": "string"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "width": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "height": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "caption": {
+                        "type": "string"
+                    },
+                    "uploadTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "caption",
+                    "contentType",
+                    "filename",
+                    "height",
+                    "id",
+                    "size",
+                    "uploadTimestamp",
+                    "width"
+                ]
+            },
+            "AttachmentData": {
+                "type": "object",
+                "properties": {
+                    "data": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Busy": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "id"
+                ]
+            },
+            "CallMessage": {
+                "type": "object",
+                "properties": {
+                    "offerMessage": {
+                        "$ref": "#/components/schemas/Offer"
+                    },
+                    "answerMessage": {
+                        "$ref": "#/components/schemas/Answer"
+                    },
+                    "busyMessage": {
+                        "$ref": "#/components/schemas/Busy"
+                    },
+                    "hangupMessage": {
+                        "$ref": "#/components/schemas/Hangup"
+                    },
+                    "iceUpdateMessages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/IceUpdate"
+                        }
+                    }
+                }
+            },
+            "Contact": {
+                "type": "object",
+                "properties": {
+                    "number": {
+                        "type": "string"
+                    },
+                    "uuid": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "givenName": {
+                        "type": "string"
+                    },
+                    "familyName": {
+                        "type": "string"
+                    },
+                    "nickName": {
+                        "type": "string"
+                    },
+                    "nickGivenName": {
+                        "type": "string"
+                    },
+                    "nickFamilyName": {
+                        "type": "string"
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "color": {
+                        "type": "string"
+                    },
+                    "isBlocked": {
+                        "type": "boolean"
+                    },
+                    "isHidden": {
+                        "type": "boolean"
+                    },
+                    "messageExpirationTime": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "profileSharing": {
+                        "type": "boolean"
+                    },
+                    "unregistered": {
+                        "type": "boolean"
+                    },
+                    "profile": {
+                        "$ref": "#/components/schemas/Profile"
+                    },
+                    "internal": {
+                        "$ref": "#/components/schemas/Internal"
+                    }
+                }
+            },
+            "ContactAddress": {
+                "type": "object",
+                "properties": {
+                    "type": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "street": {
+                        "type": "string"
+                    },
+                    "pobox": {
+                        "type": "string"
+                    },
+                    "neighborhood": {
+                        "type": "string"
+                    },
+                    "city": {
+                        "type": "string"
+                    },
+                    "region": {
+                        "type": "string"
+                    },
+                    "postcode": {
+                        "type": "string"
+                    },
+                    "country": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "city",
+                    "country",
+                    "label",
+                    "neighborhood",
+                    "pobox",
+                    "postcode",
+                    "region",
+                    "street",
+                    "type"
+                ]
+            },
+            "ContactAvatar": {
+                "type": "object",
+                "properties": {
+                    "attachment": {
+                        "$ref": "#/components/schemas/Attachment"
+                    },
+                    "isProfile": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "attachment",
+                    "isProfile"
+                ]
+            },
+            "ContactEmail": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "label",
+                    "type",
+                    "value"
+                ]
+            },
+            "ContactName": {
+                "type": "object",
+                "properties": {
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "given": {
+                        "type": "string"
+                    },
+                    "family": {
+                        "type": "string"
+                    },
+                    "prefix": {
+                        "type": "string"
+                    },
+                    "suffix": {
+                        "type": "string"
+                    },
+                    "middle": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "family",
+                    "given",
+                    "middle",
+                    "nickname",
+                    "prefix",
+                    "suffix"
+                ]
+            },
+            "ContactPhone": {
+                "type": "object",
+                "properties": {
+                    "value": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "label",
+                    "type",
+                    "value"
+                ]
+            },
+            "DataMessage": {
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "expiresInSeconds": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "isExpirationUpdate": {
+                        "type": "boolean"
+                    },
+                    "viewOnce": {
+                        "type": "boolean"
+                    },
+                    "reaction": {
+                        "$ref": "#/components/schemas/Reaction"
+                    },
+                    "quote": {
+                        "$ref": "#/components/schemas/Quote"
+                    },
+                    "payment": {
+                        "$ref": "#/components/schemas/Payment"
+                    },
+                    "mentions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Mention"
+                        }
+                    },
+                    "previews": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Preview"
+                        }
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    },
+                    "sticker": {
+                        "$ref": "#/components/schemas/Sticker"
+                    },
+                    "remoteDelete": {
+                        "$ref": "#/components/schemas/RemoteDelete"
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SharedContact"
+                        }
+                    },
+                    "pollCreate": {
+                        "$ref": "#/components/schemas/PollCreate"
+                    },
+                    "pollVote": {
+                        "$ref": "#/components/schemas/PollVote"
+                    },
+                    "pollTerminate": {
+                        "$ref": "#/components/schemas/PollTerminate"
+                    },
+                    "textStyles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TextStyle"
+                        }
+                    },
+                    "groupInfo": {
+                        "$ref": "#/components/schemas/GroupInfo"
+                    },
+                    "storyContext": {
+                        "$ref": "#/components/schemas/StoryContext"
+                    },
+                    "pinMessage": {
+                        "$ref": "#/components/schemas/PinMessage"
+                    },
+                    "unpinMessage": {
+                        "$ref": "#/components/schemas/UnpinMessage"
+                    },
+                    "adminDelete": {
+                        "$ref": "#/components/schemas/AdminDelete"
+                    }
+                },
+                "required": [
+                    "expiresInSeconds",
+                    "message",
+                    "timestamp"
+                ]
+            },
+            "EditMessage": {
+                "type": "object",
+                "properties": {
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "dataMessage": {
+                        "$ref": "#/components/schemas/DataMessage"
+                    }
+                },
+                "required": [
+                    "dataMessage",
+                    "targetSentTimestamp"
+                ]
+            },
+            "Error": {
+                "type": "object",
+                "properties": {
+                    "message": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Gradient": {
+                "type": "object",
+                "properties": {
+                    "startColor": {
+                        "type": "string"
+                    },
+                    "endColor": {
+                        "type": "string"
+                    },
+                    "colors": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "positions": {
+                        "type": "array",
+                        "items": {
+                            "type": "number",
+                            "format": "float"
+                        }
+                    },
+                    "angle": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "angle",
+                    "colors",
+                    "endColor",
+                    "positions",
+                    "startColor"
+                ]
+            },
+            "GroupInfo": {
+                "type": "object",
+                "properties": {
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "groupName": {
+                        "type": "string"
+                    },
+                    "revision": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "type": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "groupId",
+                    "groupName",
+                    "revision",
+                    "type"
+                ]
+            },
+            "Hangup": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "deviceId": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "deviceId",
+                    "id",
+                    "type"
+                ]
+            },
+            "IceUpdate": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "opaque": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "opaque"
+                ]
+            },
+            "Internal": {
+                "type": "object",
+                "properties": {
+                    "capabilities": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "unidentifiedAccessMode": {
+                        "type": "string"
+                    },
+                    "sharesPhoneNumber": {
+                        "type": "boolean"
+                    },
+                    "discoverableByPhonenumber": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "Mention": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "number": {
+                        "type": "string"
+                    },
+                    "uuid": {
+                        "type": "string"
+                    },
+                    "start": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "length": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "length",
+                    "name",
+                    "number",
+                    "start",
+                    "uuid"
+                ]
+            },
+            "MessageEnvelope": {
+                "type": "object",
+                "properties": {
+                    "source": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "sourceNumber": {
+                        "type": "string"
+                    },
+                    "sourceUuid": {
+                        "type": "string"
+                    },
+                    "sourceName": {
+                        "type": "string"
+                    },
+                    "sourceDevice": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "serverReceivedTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "serverDeliveredTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "dataMessage": {
+                        "$ref": "#/components/schemas/DataMessage"
+                    },
+                    "editMessage": {
+                        "$ref": "#/components/schemas/EditMessage"
+                    },
+                    "storyMessage": {
+                        "$ref": "#/components/schemas/StoryMessage"
+                    },
+                    "syncMessage": {
+                        "$ref": "#/components/schemas/SyncMessage"
+                    },
+                    "callMessage": {
+                        "$ref": "#/components/schemas/CallMessage"
+                    },
+                    "receiptMessage": {
+                        "$ref": "#/components/schemas/ReceiptMessage"
+                    },
+                    "typingMessage": {
+                        "$ref": "#/components/schemas/TypingMessage"
+                    }
+                }
+            },
+            "Offer": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "opaque": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "opaque",
+                    "type"
+                ]
+            },
+            "Payment": {
+                "type": "object",
+                "properties": {
+                    "note": {
+                        "type": "string"
+                    },
+                    "receipt": {
+                        "type": "string",
+                        "format": "byte"
+                    }
+                },
+                "required": [
+                    "note",
+                    "receipt"
+                ]
+            },
+            "PinMessage": {
+                "type": "object",
+                "properties": {
+                    "targetAuthor": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "targetAuthorNumber": {
+                        "type": "string"
+                    },
+                    "targetAuthorUuid": {
+                        "type": "string"
+                    },
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "pinDurationSeconds": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "pinDurationSeconds",
+                    "targetAuthor",
+                    "targetAuthorNumber",
+                    "targetAuthorUuid",
+                    "targetSentTimestamp"
+                ]
+            },
+            "PollCreate": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string"
+                    },
+                    "allowMultiple": {
+                        "type": "boolean"
+                    },
+                    "options": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "allowMultiple",
+                    "options",
+                    "question"
+                ]
+            },
+            "PollTerminate": {
+                "type": "object",
+                "properties": {
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "targetSentTimestamp"
+                ]
+            },
+            "PollVote": {
+                "type": "object",
+                "properties": {
+                    "author": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "authorNumber": {
+                        "type": "string"
+                    },
+                    "authorUuid": {
+                        "type": "string"
+                    },
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "optionIndexes": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    "voteCount": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "author",
+                    "authorNumber",
+                    "authorUuid",
+                    "optionIndexes",
+                    "targetSentTimestamp",
+                    "voteCount"
+                ]
+            },
+            "Preview": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "image": {
+                        "$ref": "#/components/schemas/Attachment"
+                    }
+                },
+                "required": [
+                    "description",
+                    "image",
+                    "title",
+                    "url"
+                ]
+            },
+            "Profile": {
+                "type": "object",
+                "properties": {
+                    "lastUpdateTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "givenName": {
+                        "type": "string"
+                    },
+                    "familyName": {
+                        "type": "string"
+                    },
+                    "about": {
+                        "type": "string"
+                    },
+                    "aboutEmoji": {
+                        "type": "string"
+                    },
+                    "hasAvatar": {
+                        "type": "boolean"
+                    },
+                    "mobileCoinAddress": {
+                        "type": "string"
+                    }
+                }
+            },
+            "Quote": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "author": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "authorNumber": {
+                        "type": "string"
+                    },
+                    "authorUuid": {
+                        "type": "string"
+                    },
+                    "text": {
+                        "type": "string"
+                    },
+                    "mentions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Mention"
+                        }
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/QuotedAttachment"
+                        }
+                    },
+                    "textStyles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TextStyle"
+                        }
+                    }
+                },
+                "required": [
+                    "attachments",
+                    "author",
+                    "authorNumber",
+                    "authorUuid",
+                    "id",
+                    "text"
+                ]
+            },
+            "QuotedAttachment": {
+                "type": "object",
+                "properties": {
+                    "contentType": {
+                        "type": "string"
+                    },
+                    "filename": {
+                        "type": "string"
+                    },
+                    "thumbnail": {
+                        "$ref": "#/components/schemas/Attachment"
+                    }
+                },
+                "required": [
+                    "contentType",
+                    "filename"
+                ]
+            },
+            "Reaction": {
+                "type": "object",
+                "properties": {
+                    "emoji": {
+                        "type": "string"
+                    },
+                    "targetAuthor": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "targetAuthorNumber": {
+                        "type": "string"
+                    },
+                    "targetAuthorUuid": {
+                        "type": "string"
+                    },
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "isRemove": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "emoji",
+                    "isRemove",
+                    "targetAuthor",
+                    "targetAuthorNumber",
+                    "targetAuthorUuid",
+                    "targetSentTimestamp"
+                ]
+            },
+            "ReceiptMessage": {
+                "type": "object",
+                "properties": {
+                    "when": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "isDelivery": {
+                        "type": "boolean"
+                    },
+                    "isRead": {
+                        "type": "boolean"
+                    },
+                    "isViewed": {
+                        "type": "boolean"
+                    },
+                    "timestamps": {
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    }
+                },
+                "required": [
+                    "isDelivery",
+                    "isRead",
+                    "isViewed",
+                    "timestamps",
+                    "when"
+                ]
+            },
+            "RecipientAddress": {
+                "type": "object",
+                "properties": {
+                    "uuid": {
+                        "type": "string"
+                    },
+                    "number": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "number",
+                    "username",
+                    "uuid"
+                ]
+            },
+            "RemoteDelete": {
+                "type": "object",
+                "properties": {
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "timestamp"
+                ]
+            },
+            "SchemaCatalog": {
+                "type": "object",
+                "properties": {
+                    "adminDelete": {
+                        "$ref": "#/components/schemas/AdminDelete"
+                    },
+                    "attachment": {
+                        "$ref": "#/components/schemas/Attachment"
+                    },
+                    "attachmentData": {
+                        "$ref": "#/components/schemas/AttachmentData"
+                    },
+                    "callMessage": {
+                        "$ref": "#/components/schemas/CallMessage"
+                    },
+                    "contact": {
+                        "$ref": "#/components/schemas/Contact"
+                    },
+                    "contactAddress": {
+                        "$ref": "#/components/schemas/ContactAddress"
+                    },
+                    "contactAvatar": {
+                        "$ref": "#/components/schemas/ContactAvatar"
+                    },
+                    "contactEmail": {
+                        "$ref": "#/components/schemas/ContactEmail"
+                    },
+                    "contactName": {
+                        "$ref": "#/components/schemas/ContactName"
+                    },
+                    "contactPhone": {
+                        "$ref": "#/components/schemas/ContactPhone"
+                    },
+                    "dataMessage": {
+                        "$ref": "#/components/schemas/DataMessage"
+                    },
+                    "editMessage": {
+                        "$ref": "#/components/schemas/EditMessage"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/Error"
+                    },
+                    "groupInfo": {
+                        "$ref": "#/components/schemas/GroupInfo"
+                    },
+                    "mention": {
+                        "$ref": "#/components/schemas/Mention"
+                    },
+                    "messageEnvelope": {
+                        "$ref": "#/components/schemas/MessageEnvelope"
+                    },
+                    "payment": {
+                        "$ref": "#/components/schemas/Payment"
+                    },
+                    "pinMessage": {
+                        "$ref": "#/components/schemas/PinMessage"
+                    },
+                    "pollCreate": {
+                        "$ref": "#/components/schemas/PollCreate"
+                    },
+                    "pollTerminate": {
+                        "$ref": "#/components/schemas/PollTerminate"
+                    },
+                    "pollVote": {
+                        "$ref": "#/components/schemas/PollVote"
+                    },
+                    "preview": {
+                        "$ref": "#/components/schemas/Preview"
+                    },
+                    "quote": {
+                        "$ref": "#/components/schemas/Quote"
+                    },
+                    "quotedAttachment": {
+                        "$ref": "#/components/schemas/QuotedAttachment"
+                    },
+                    "reaction": {
+                        "$ref": "#/components/schemas/Reaction"
+                    },
+                    "receiptMessage": {
+                        "$ref": "#/components/schemas/ReceiptMessage"
+                    },
+                    "recipientAddress": {
+                        "$ref": "#/components/schemas/RecipientAddress"
+                    },
+                    "remoteDelete": {
+                        "$ref": "#/components/schemas/RemoteDelete"
+                    },
+                    "sendMessageResult": {
+                        "$ref": "#/components/schemas/SendMessageResult"
+                    },
+                    "sharedContact": {
+                        "$ref": "#/components/schemas/SharedContact"
+                    },
+                    "sticker": {
+                        "$ref": "#/components/schemas/Sticker"
+                    },
+                    "storyContext": {
+                        "$ref": "#/components/schemas/StoryContext"
+                    },
+                    "storyMessage": {
+                        "$ref": "#/components/schemas/StoryMessage"
+                    },
+                    "syncDataMessage": {
+                        "$ref": "#/components/schemas/SyncDataMessage"
+                    },
+                    "syncMessage": {
+                        "$ref": "#/components/schemas/SyncMessage"
+                    },
+                    "syncReadMessage": {
+                        "$ref": "#/components/schemas/SyncReadMessage"
+                    },
+                    "syncStoryMessage": {
+                        "$ref": "#/components/schemas/SyncStoryMessage"
+                    },
+                    "textStyle": {
+                        "$ref": "#/components/schemas/TextStyle"
+                    },
+                    "typingMessage": {
+                        "$ref": "#/components/schemas/TypingMessage"
+                    },
+                    "unpinMessage": {
+                        "$ref": "#/components/schemas/UnpinMessage"
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    },
+                    "mentions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Mention"
+                        }
+                    },
+                    "previews": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Preview"
+                        }
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SharedContact"
+                        }
+                    },
+                    "textStyles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TextStyle"
+                        }
+                    }
+                }
+            },
+            "SendMessageResult": {
+                "type": "object",
+                "properties": {
+                    "recipientAddress": {
+                        "$ref": "#/components/schemas/RecipientAddress"
+                    },
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "SUCCESS",
+                            "NETWORK_FAILURE",
+                            "UNREGISTERED_FAILURE",
+                            "IDENTITY_FAILURE",
+                            "RATE_LIMIT_FAILURE",
+                            "INVALID_PRE_KEY_FAILURE"
+                        ]
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "retryAfterSeconds": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "recipientAddress",
+                    "type"
+                ]
+            },
+            "SharedContact": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "$ref": "#/components/schemas/ContactName"
+                    },
+                    "avatar": {
+                        "$ref": "#/components/schemas/ContactAvatar"
+                    },
+                    "phone": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ContactPhone"
+                        }
+                    },
+                    "email": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ContactEmail"
+                        }
+                    },
+                    "address": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ContactAddress"
+                        }
+                    },
+                    "organization": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "name",
+                    "organization"
+                ]
+            },
+            "Sticker": {
+                "type": "object",
+                "properties": {
+                    "packId": {
+                        "type": "string"
+                    },
+                    "stickerId": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "packId",
+                    "stickerId"
+                ]
+            },
+            "StoryContext": {
+                "type": "object",
+                "properties": {
+                    "authorNumber": {
+                        "type": "string"
+                    },
+                    "authorUuid": {
+                        "type": "string"
+                    },
+                    "sentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "authorNumber",
+                    "authorUuid",
+                    "sentTimestamp"
+                ]
+            },
+            "StoryMessage": {
+                "type": "object",
+                "properties": {
+                    "allowsReplies": {
+                        "type": "boolean"
+                    },
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "fileAttachment": {
+                        "$ref": "#/components/schemas/Attachment"
+                    },
+                    "textAttachment": {
+                        "$ref": "#/components/schemas/TextAttachment"
+                    }
+                },
+                "required": [
+                    "allowsReplies"
+                ]
+            },
+            "SyncDataMessage": {
+                "type": "object",
+                "properties": {
+                    "destination": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "destinationNumber": {
+                        "type": "string"
+                    },
+                    "destinationUuid": {
+                        "type": "string"
+                    },
+                    "editMessage": {
+                        "$ref": "#/components/schemas/EditMessage"
+                    },
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "expiresInSeconds": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "isExpirationUpdate": {
+                        "type": "boolean"
+                    },
+                    "viewOnce": {
+                        "type": "boolean"
+                    },
+                    "reaction": {
+                        "$ref": "#/components/schemas/Reaction"
+                    },
+                    "quote": {
+                        "$ref": "#/components/schemas/Quote"
+                    },
+                    "payment": {
+                        "$ref": "#/components/schemas/Payment"
+                    },
+                    "mentions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Mention"
+                        }
+                    },
+                    "previews": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Preview"
+                        }
+                    },
+                    "attachments": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Attachment"
+                        }
+                    },
+                    "sticker": {
+                        "$ref": "#/components/schemas/Sticker"
+                    },
+                    "remoteDelete": {
+                        "$ref": "#/components/schemas/RemoteDelete"
+                    },
+                    "contacts": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SharedContact"
+                        }
+                    },
+                    "pollCreate": {
+                        "$ref": "#/components/schemas/PollCreate"
+                    },
+                    "pollVote": {
+                        "$ref": "#/components/schemas/PollVote"
+                    },
+                    "pollTerminate": {
+                        "$ref": "#/components/schemas/PollTerminate"
+                    },
+                    "textStyles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TextStyle"
+                        }
+                    },
+                    "groupInfo": {
+                        "$ref": "#/components/schemas/GroupInfo"
+                    },
+                    "storyContext": {
+                        "$ref": "#/components/schemas/StoryContext"
+                    },
+                    "pinMessage": {
+                        "$ref": "#/components/schemas/PinMessage"
+                    },
+                    "unpinMessage": {
+                        "$ref": "#/components/schemas/UnpinMessage"
+                    },
+                    "adminDelete": {
+                        "$ref": "#/components/schemas/AdminDelete"
+                    },
+                    "dataMessage": {}
+                },
+                "required": [
+                    "dataMessage",
+                    "destination",
+                    "destinationNumber",
+                    "destinationUuid",
+                    "expiresInSeconds",
+                    "message",
+                    "timestamp"
+                ]
+            },
+            "SyncMessage": {
+                "type": "object",
+                "properties": {
+                    "sentMessage": {
+                        "$ref": "#/components/schemas/SyncDataMessage"
+                    },
+                    "sentStoryMessage": {
+                        "$ref": "#/components/schemas/SyncStoryMessage"
+                    },
+                    "blockedNumbers": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "blockedGroupIds": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "readMessages": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/SyncReadMessage"
+                        }
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "CONTACTS_SYNC",
+                            "GROUPS_SYNC",
+                            "REQUEST_SYNC"
+                        ]
+                    }
+                }
+            },
+            "SyncReadMessage": {
+                "type": "object",
+                "properties": {
+                    "sender": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "senderNumber": {
+                        "type": "string"
+                    },
+                    "senderUuid": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "SyncStoryMessage": {
+                "type": "object",
+                "properties": {
+                    "destinationNumber": {
+                        "type": "string"
+                    },
+                    "destinationUuid": {
+                        "type": "string"
+                    },
+                    "allowsReplies": {
+                        "type": "boolean"
+                    },
+                    "groupId": {
+                        "type": "string"
+                    },
+                    "fileAttachment": {
+                        "$ref": "#/components/schemas/Attachment"
+                    },
+                    "textAttachment": {
+                        "$ref": "#/components/schemas/TextAttachment"
+                    },
+                    "dataMessage": {}
+                },
+                "required": [
+                    "allowsReplies",
+                    "dataMessage",
+                    "destinationNumber",
+                    "destinationUuid"
+                ]
+            },
+            "TextAttachment": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string"
+                    },
+                    "style": {
+                        "type": "string"
+                    },
+                    "textForegroundColor": {
+                        "type": "string"
+                    },
+                    "textBackgroundColor": {
+                        "type": "string"
+                    },
+                    "preview": {
+                        "$ref": "#/components/schemas/Preview"
+                    },
+                    "backgroundGradient": {
+                        "$ref": "#/components/schemas/Gradient"
+                    },
+                    "backgroundColor": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "text"
+                ]
+            },
+            "TextStyle": {
+                "type": "object",
+                "properties": {
+                    "style": {
+                        "type": "string"
+                    },
+                    "start": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "length": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                },
+                "required": [
+                    "length",
+                    "start",
+                    "style"
+                ]
+            },
+            "TypingMessage": {
+                "type": "object",
+                "properties": {
+                    "action": {
+                        "type": "string"
+                    },
+                    "timestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "groupId": {
+                        "type": "string"
+                    }
+                }
+            },
+            "UnpinMessage": {
+                "type": "object",
+                "properties": {
+                    "targetAuthor": {
+                        "type": "string",
+                        "deprecated": true
+                    },
+                    "targetAuthorNumber": {
+                        "type": "string"
+                    },
+                    "targetAuthorUuid": {
+                        "type": "string"
+                    },
+                    "targetSentTimestamp": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                },
+                "required": [
+                    "targetAuthor",
+                    "targetAuthorNumber",
+                    "targetAuthorUuid",
+                    "targetSentTimestamp"
+                ]
+            }
+        }
+    }
+}
