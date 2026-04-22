@@ -42,7 +42,7 @@ Confirm that the server is running in the correct mode by visiting http://127.0.
 
 ## Setup signalbot
 
-1. Install `signalbot`
+1. Install `signalbot` in your venv of choice.
     ```bash
     pip install signalbot
     ```
@@ -53,15 +53,16 @@ Confirm that the server is running in the correct mode by visiting http://127.0.
     --8<-- "examples/simple_bot.py"
     ```
 
-6. Run the `bot.py` script
-Pass the following environment variables to make the example run:
-    - `SIGNAL_SERVICE`: Address of the signal service without protocol, e.g. `127.0.0.1:8080`
-    - `PHONE_NUMBER`: Phone number of the bot, e.g. `+49123456789`
+6. Run the `bot.py` script.
+
+    Pass the following environment variables to make the example run:
+
+    - `SIGNAL_SERVICE`: Address of the signal service without protocol
+    - `PHONE_NUMBER`: Phone number of the bot
 
     ```bash
     export SIGNAL_SERVICE="127.0.0.1:8080"
     export PHONE_NUMBER="+49123456789"
-    pip install signalbot
     python bot.py
     ```
 
