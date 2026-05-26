@@ -120,6 +120,18 @@ By default the `bot.storage` is in-memory.
 Any changes are lost when the bot is stopped or reseted.
 For persistent storage to disk, check the SQLite or Redis storage in `storage.py`.
 
+To use Redis with password authentication, add `redis_password` to the storage config:
+
+```python
+config = {
+    "storage": {
+        "redis_host": "redis",
+        "redis_port": 6379,
+        "redis_password": "your_password",
+    },
+}
+```
+
 ### Command
 
 To implement your own commands, you need to inherent `Command` and overwrite following methods:

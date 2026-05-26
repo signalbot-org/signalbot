@@ -115,7 +115,10 @@ class SignalBot:
             else:
                 self._redis_host = config_storage["redis_host"]
                 self._redis_port = config_storage["redis_port"]
-                self.storage = RedisStorage(self._redis_host, self._redis_port)
+                self._redis_password = config_storage.get("redis_password")
+                self.storage = RedisStorage(
+                    self._redis_host, self._redis_port, self._redis_password
+                )
                 self._logger.info("redis storage initilized")
         except Exception:  # noqa: BLE001
             self.storage = SQLiteStorage()
