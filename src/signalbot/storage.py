@@ -79,8 +79,8 @@ class SQLiteStorage(Storage):
 
 
 class RedisStorage(Storage):
-    def __init__(self, host: str, port: int):  # noqa: ANN204
-        self._redis = redis.Redis(host=host, port=port, db=0)
+    def __init__(self, host: str, port: int, password: str | None = None):  # noqa: ANN204
+        self._redis = redis.Redis(host=host, port=port, db=0, password=password)
 
     def exists(self, key: str) -> bool:
         return self._redis.exists(key)

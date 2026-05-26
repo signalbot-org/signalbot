@@ -151,7 +151,9 @@ class SignalBot:
             self._logger.info("sqlite storage initilized")
         elif isinstance(self.config.storage, RedisConfig):
             self.storage = RedisStorage(
-                self.config.storage.redis_host, self.config.storage.redis_port
+                self.config.storage.redis_host,
+                self.config.storage.redis_port,
+                self.config.storage.redis_password,
             )
             self._logger.info("redis storage initilized")
         elif isinstance(self.config.storage, InMemoryConfig):

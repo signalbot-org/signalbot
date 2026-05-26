@@ -18,11 +18,13 @@ class RedisConfig(BaseModel):
         type: The type of storage.
         redis_host: The hostname of the Redis server.
         redis_port: The port number of the Redis server.
+        redis_password: The password for Redis authentication. Defaults to `None`.
     """
 
     type: Literal["redis"] = "redis"
     redis_host: str
     redis_port: int
+    redis_password: str | None = None
 
 
 class SQLiteConfig(BaseModel):
