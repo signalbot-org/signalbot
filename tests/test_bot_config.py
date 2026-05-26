@@ -49,6 +49,19 @@ class TestLoadConfig:
         assert isinstance(config, Config)
         assert isinstance(config.storage, RedisConfig)
         assert config.storage.redis_host == "redis_host"
+        assert config.storage.redis_password is None
+
+    def test_load_config_from_dict_with_redis_password(self):
+        self._dict_config["storage"] = {
+            "type": "redis",
+            "redis_host": "redis_host",
+            "redis_port": 6379,
+            "redis_password": "secret",
+        }
+        config = load_config(self._dict_config)
+        assert isinstance(config, Config)
+        assert isinstance(config.storage, RedisConfig)
+        assert config.storage.redis_password == "secret"
 
     def test_load_config_from_json_file(self):
         self._config.retry_interval = 3
