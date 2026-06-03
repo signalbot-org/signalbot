@@ -2,14 +2,15 @@ import aiohttp
 import pytest
 from pytest_mock import MockerFixture
 
-from signalbot import ConnectionMode, SignalAPI
+from signalbot import ConnectionMode, SignalAPI, BasicAuthentication
 from signalbot.api import HEALTH_CHECK_GOOD_STATUS, HealthCheckError
 
+import base64
 
 class TestAPI:
     signal_service = "127.0.0.1:8080"
     phone_number = "+49123456789"
-
+    
     group_id = "group.OyZzqio1xDmYiLsQ1VsqRcUFOU4tK2TcECmYt2KeozHJwglMBHAPS7jlkrm="
 
     @pytest.fixture(autouse=True)
@@ -192,3 +193,38 @@ class TestAPI:
         assert is_healthy is True
         assert health_check_mock.call_count == 1
         assert signal_api._signal_api_uris.use_https is True
+
+    @pytest.mark.asyncio
+    async def test_send_with_auth(self, mocker: MockerFixture):
+        signal_api = SignalAPI(
+            self.signal_service,
+            self.phone_number, 
+            auth=self.auth
+        )
+
+        username = "user"
+        password = "pw"
+
+        auth = BasicAuthentication(username, password)
+
+        credentials = base64.b64encode(f"{username}:{password}")
+        status_code = 201
+        mock2 = mocker.AsyncMock()
+        mock2.return_value = {"timestamp": "1638715559464"}
+
+        mock = mocker.patch("aiohttp.ClientSession.post", new_callable=mocker.AsyncMock)
+        mock.return_value = mocker.AsyncMock(
+            spec=aiohttp.ClientResponse,
+            status_code=status_code,
+            json=mock2,
+        )
+
+        receiver = self.group_id
+        message = "Hello World!"
+        resp = await signal_api.send(receiver, message)
+
+        _, kwargs = mock_post.call_args
+        
+        assert resp.status_code == status_code
+        assert "headers" in kwargs
+        assert kwargs["headers"]["Authorization"] == f"Basic {credentials}"
