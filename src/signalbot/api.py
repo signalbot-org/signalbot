@@ -2,14 +2,15 @@ from __future__ import annotations
 
 import base64
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, Protocol
+from typing import TYPE_CHECKING, Any, Literal
+
+from auth import Authentication
 
 import aiohttp
 import websockets
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator
-
 
 class ConnectionMode(str, Enum):
     """Protocol strategy for connecting to `signal-cli-rest-api`.
@@ -23,24 +24,6 @@ class ConnectionMode(str, Enum):
     HTTPS_ONLY = "https_only"
     HTTP_ONLY = "http_only"
     AUTO = "auto"
-
-class Authentication(Protocol):
-    @property
-    def header(self) -> str: ...
-
-class BasicAuthentication:
-    def __init__(
-        self,
-        username: str,
-        password: str,
-    ):
-        self.username = username
-        self.password = password
-
-    @property
-    def header(self) -> str:
-        credentials = base64.b64encode(f"{self.username}:{self.password}")
-        return f"Basic {credentials}"
     
 HEALTH_CHECK_GOOD_STATUS = 204
 
