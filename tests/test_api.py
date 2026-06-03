@@ -207,7 +207,9 @@ class TestAPI:
 
         auth = BasicAuthentication(username, password)
 
-        credentials = base64.b64encode(f"{username}:{password}")
+        base64_bytes = base64.b64encode(f"{username}:{password}")
+        base64_string = str(base64_bytes, encoding="utf-8")
+        
         status_code = 201
         mock2 = mocker.AsyncMock()
         mock2.return_value = {"timestamp": "1638715559464"}
@@ -227,4 +229,4 @@ class TestAPI:
         
         assert resp.status_code == status_code
         assert "headers" in kwargs
-        assert kwargs["headers"]["Authorization"] == f"Basic {credentials}"
+        assert kwargs["headers"]["Authorization"] == f"Basic {base64_string}"
