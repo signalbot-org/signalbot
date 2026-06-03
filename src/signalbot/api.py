@@ -32,7 +32,7 @@ class SignalAPI:
         self,
         signal_service: str,
         phone_number: str,
-        auth: Authentication | None,
+        auth: Authentication | None = None,
         download_attachments: bool = True,  # noqa: FBT001, FBT002
         connection_mode: ConnectionMode = ConnectionMode.AUTO,
     ):
