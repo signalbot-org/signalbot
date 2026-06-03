@@ -18,5 +18,6 @@ class BasicAuthentication:
 
     @property
     def header(self) -> str:
-        credentials = base64.b64encode(f"{self.username}:{self.password}")
-        return f"Basic {credentials}"
+        credential_bytes = base64.b64encode(f"{self.username}:{self.password}")
+        credential_string = str(credential_bytes, encoding="utf-8")
+        return f"Basic {credential_string}"
