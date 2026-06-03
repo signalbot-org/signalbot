@@ -60,6 +60,7 @@ class Config(BaseModel):
     Attributes:
         signal_service: The URL of the `signal-cli-rest-api` service to connect to.
         phone_number: The phone number of the bot.
+        auth: The authentication method with credentials used for http requests. Defaults to `None`.
         storage: The configuration for the storage backend to use. Defaults to `None`.
         retry_interval: The interval in seconds to wait before retrying a failed
             connection to the signal service.
@@ -71,6 +72,7 @@ class Config(BaseModel):
 
     signal_service: str
     phone_number: str
+    auth: Authentication | None = None
 
     storage: RedisConfig | SQLiteConfig | InMemoryConfig | None = None
     retry_interval: int = 1
