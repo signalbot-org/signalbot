@@ -4,7 +4,7 @@ import base64
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Literal
 
-from auth import Authentication
+from signalbot.auth import Authentication
 
 import aiohttp
 import websockets
