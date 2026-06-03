@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import base64
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, Protocol
 
 import aiohttp
 import websockets
@@ -24,19 +24,37 @@ class ConnectionMode(str, Enum):
     HTTP_ONLY = "http_only"
     AUTO = "auto"
 
+class Authentication(Protocol):
+    @property
+    def header(self) -> str: ...
 
+class BasicAuthentication:
+    def __init__(
+        self,
+        username: str,
+        password: str,
+    ):
+        self.username = username
+        self.password = password
+
+    @property
+    def header(self) -> str:
+        credentials = base64.b64encode(f"{self.username}:{self.password}")
+        return f"Basic {credentials}"
+    
 HEALTH_CHECK_GOOD_STATUS = 204
-
 
 class SignalAPI:
     def __init__(  # noqa: ANN204
         self,
         signal_service: str,
         phone_number: str,
+        auth: Authentication | None,
         download_attachments: bool = True,  # noqa: FBT001, FBT002
         connection_mode: ConnectionMode = ConnectionMode.AUTO,
     ):
         self.phone_number = phone_number
+        self.auth = auth
         self.connection_mode = connection_mode
         use_https = connection_mode in (ConnectionMode.HTTPS_ONLY, ConnectionMode.AUTO)
         self._signal_api_uris = SignalAPIURIs(
@@ -103,8 +121,13 @@ class SignalAPI:
         if view_once:
             payload["view_once"] = True
 
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+        
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.post(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -130,9 +153,13 @@ class SignalAPI:
             "answers": answers,
             "allow_multiple_selections": allow_multiple_selections,
         }
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
 
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.post(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -157,8 +184,13 @@ class SignalAPI:
             "target_author": target_author,
             "timestamp": timestamp,
         }
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+        
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.post(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -180,8 +212,13 @@ class SignalAPI:
             "receipt_type": receipt_type,
             "timestamp": timestamp,
         }
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+        
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.post(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -196,8 +233,13 @@ class SignalAPI:
         payload = {
             "recipient": receiver,
         }
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+        
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.put(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -212,8 +254,12 @@ class SignalAPI:
         payload = {
             "recipient": receiver,
         }
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.delete(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -225,8 +271,13 @@ class SignalAPI:
 
     async def get_groups(self) -> list[dict[str, Any]]:
         uri = self._signal_api_uris.groups_uri()
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.get(uri)
                 resp.raise_for_status()
                 return await resp.json()
@@ -238,8 +289,13 @@ class SignalAPI:
 
     async def get_group(self, group_id: str) -> dict[str, Any]:
         uri = self._signal_api_uris.group_id_uri(group_id)
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.get(uri)
                 resp.raise_for_status()
                 return await resp.json()
@@ -251,8 +307,13 @@ class SignalAPI:
 
     async def get_attachment(self, attachment_id: str) -> str:
         uri = f"{self._signal_api_uris.attachment_rest_uri()}/{attachment_id}"
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.get(uri)
                 resp.raise_for_status()
                 content = await resp.content.read()
@@ -268,9 +329,14 @@ class SignalAPI:
         return base64_string  # noqa: RET504
 
     async def delete_attachment(self, attachment_id: str) -> str:
-        uri = f"{self._signal_api_uris.attachment_rest_uri()}/{attachment_id}"
+        uri = f"{self._signal_api_uris.attachment_rest_uri()}/{attachment_id}"        
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.delete(uri)
                 resp.raise_for_status()
                 return resp
@@ -295,8 +361,13 @@ class SignalAPI:
         if name is not None:
             payload["name"] = name
 
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.put(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -328,9 +399,14 @@ class SignalAPI:
 
         if name is not None:
             payload["name"] = name
+        
+        headers = {}
 
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.put(uri, json=payload)
                 resp.raise_for_status()
                 return resp
@@ -342,8 +418,14 @@ class SignalAPI:
 
     async def health_check(self) -> aiohttp.ClientResponse:
         uri = self._signal_api_uris.health_check_uri()
+        
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.get(uri)
                 resp.raise_for_status()
                 return resp
@@ -373,8 +455,14 @@ class SignalAPI:
 
     async def get_signal_cli_about(self) -> dict[str, Any]:
         uri = self._signal_api_uris.about_rest_uri()
+        
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.get(uri)
                 resp.raise_for_status()
                 return await resp.json()
@@ -397,9 +485,14 @@ class SignalAPI:
         payload = {
             "recipient": receiver,
             "timestamp": timestamp,
-        }
+        }    
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(headers=headers) as session:
                 resp = await session.delete(uri, json=payload)
                 resp.raise_for_status()
                 return resp
