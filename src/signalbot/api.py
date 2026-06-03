@@ -48,9 +48,14 @@ class SignalAPI:
         self.download_attachments = download_attachments
 
     async def receive(self) -> AsyncIterator[str]:
+        headers = {}
+
+        if self.auth != None:
+            headers["Authorization"] = self.auth.header
+            
         try:
             uri = self._signal_api_uris.receive_ws_uri()
-            self.connection = websockets.connect(uri, ping_interval=None)
+            self.connection = websockets.connect(uri, ping_interval=None, additional_headers=headers)
             async with self.connection as websocket:
                 async for raw_message in websocket:
                     yield raw_message
