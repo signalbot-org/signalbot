@@ -21,3 +21,14 @@ class BasicAuthentication:
         credential_bytes = base64.b64encode(f"{self.username}:{self.password}")
         credential_string = str(credential_bytes, encoding="utf-8")
         return f"Basic {credential_string}"
+
+class BearerAuthentication:
+    def __init__(
+        self,
+        token: str,
+    ):
+        self.token = token
+
+    @property
+    def header(self) -> str:
+        return f"Bearer {self.token}"
