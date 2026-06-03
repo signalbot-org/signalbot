@@ -121,6 +121,7 @@ class SignalBot:
             self._signal = SignalAPI(
                 self.config.signal_service,
                 self.config.phone_number,
+                self.config.auth,
                 self.config.download_attachments,
                 self.config.connection_mode,
             )
