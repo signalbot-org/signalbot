@@ -8,6 +8,7 @@ import yaml
 from pydantic import BaseModel
 
 from signalbot.api import ConnectionMode
+from signalbot.auth import Authentication
 
 
 class RedisConfig(BaseModel):
