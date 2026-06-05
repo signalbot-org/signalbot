@@ -196,16 +196,16 @@ class TestAPI:
 
     @pytest.mark.asyncio
     async def test_send_with_auth(self, mocker: MockerFixture):
+        username = "user"
+        password = "pw"
+        
+        auth = BasicAuthentication(username, password)
+        
         signal_api = SignalAPI(
             self.signal_service,
             self.phone_number, 
-            auth=self.auth
+            auth=auth
         )
-
-        username = "user"
-        password = "pw"
-
-        auth = BasicAuthentication(username, password)
 
         base64_bytes = base64.b64encode(f"{username}:{password}")
         base64_string = str(base64_bytes, encoding="utf-8")
