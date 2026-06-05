@@ -117,3 +117,19 @@ storage:
     redis_host: "localhost"
     redis_port: 6379
 ```
+
+## Authentication
+
+Enables usage of an auth-enabled `signal-cli-rest-api` instance (behind a proxy).
+```python
+from signalbot import SignalBot, Config, ConnectionMode, BasicAuthentication
+
+config = Config(
+    signal_service="http://localhost:8080",
+    phone_number="+1234567890",
+    auth=BasicAuthentication("user", "password"),
+)
+
+bot = SignalBot(config)
+bot.start()
+```
