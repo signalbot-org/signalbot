@@ -50,7 +50,7 @@ class SignalAPI:
     async def receive(self) -> AsyncIterator[str]:
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -111,7 +111,7 @@ class SignalAPI:
 
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
         
         try:
@@ -143,7 +143,7 @@ class SignalAPI:
         }
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
 
         try:
@@ -174,7 +174,7 @@ class SignalAPI:
         }
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
         
         try:
@@ -202,7 +202,7 @@ class SignalAPI:
         }
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
         
         try:
@@ -223,7 +223,7 @@ class SignalAPI:
         }
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
         
         try:
@@ -244,7 +244,7 @@ class SignalAPI:
         }
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
         try:
             async with aiohttp.ClientSession(headers=headers) as session:
@@ -261,7 +261,7 @@ class SignalAPI:
         uri = self._signal_api_uris.groups_uri()
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -279,7 +279,7 @@ class SignalAPI:
         uri = self._signal_api_uris.group_id_uri(group_id)
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -297,7 +297,7 @@ class SignalAPI:
         uri = f"{self._signal_api_uris.attachment_rest_uri()}/{attachment_id}"
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -320,7 +320,7 @@ class SignalAPI:
         uri = f"{self._signal_api_uris.attachment_rest_uri()}/{attachment_id}"        
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -351,7 +351,7 @@ class SignalAPI:
 
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -390,7 +390,7 @@ class SignalAPI:
         
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -409,7 +409,7 @@ class SignalAPI:
         
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -446,7 +446,7 @@ class SignalAPI:
         
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
@@ -476,7 +476,7 @@ class SignalAPI:
         }    
         headers = {}
 
-        if self.auth != None:
+        if self.auth is not None:
             headers["Authorization"] = self.auth.header
             
         try:
