@@ -2,7 +2,7 @@ import aiohttp
 import pytest
 from pytest_mock import MockerFixture
 
-from signalbot import ConnectionMode, SignalAPI, BasicAuthentication
+from signalbot import ConnectionMode, SignalAPI, Authentication, BasicAuthentication, BearerAuthentication
 from signalbot.api import HEALTH_CHECK_GOOD_STATUS, HealthCheckError
 
 import base64
@@ -194,39 +194,63 @@ class TestAPI:
         assert health_check_mock.call_count == 1
         assert signal_api._signal_api_uris.use_https is True
 
-    @pytest.mark.asyncio
-    async def test_send_with_auth(self, mocker: MockerFixture):
-        username = "user"
-        password = "pw"
-        
-        auth = BasicAuthentication(username, password)
-        
+    async def test_send_with_auth_helper(self, mocker: MockerFixture, auth: Authentication | None):
         signal_api = SignalAPI(
             self.signal_service,
             self.phone_number, 
             auth=auth
         )
-
-        base64_bytes = base64.b64encode(f"{username}:{password}")
-        base64_string = str(base64_bytes, encoding="utf-8")
         
         status_code = 201
         mock2 = mocker.AsyncMock()
         mock2.return_value = {"timestamp": "1638715559464"}
 
-        mock = mocker.patch("aiohttp.ClientSession.post", new_callable=mocker.AsyncMock)
-        mock.return_value = mocker.AsyncMock(
+        mock_session = mocker.AsyncMock()
+        mock_session.post.return_value = mocker.AsyncMock(
             spec=aiohttp.ClientResponse,
             status_code=status_code,
             json=mock2,
         )
 
+        mock = mocker.patch("aiohttp.ClientSession")
+        mock.return_value.__aenter__.return_value = mock_session
+
         receiver = self.group_id
         message = "Hello World!"
+
         resp = await signal_api.send(receiver, message)
 
-        _, kwargs = mock_post.call_args
-        
+        _, kwargs = mock.call_args
+
         assert resp.status_code == status_code
-        assert "headers" in kwargs
-        assert kwargs["headers"]["Authorization"] == f"Basic {base64_string}"
+        return kwargs["headers"].get("Authorization")
+
+    @pytest.mark.asyncio
+    def test_send_with_basic_auth(self, mocker: MockerFixture):
+        username = "user"
+        password = "pw"
+
+        base64_bytes = base64.b64encode(f"{username}:{password}")
+        base64_string = str(base64_bytes, encoding="utf-8")
+
+        auth = BasicAuthentication(username, password)
+        
+        auth_header = test_send_with_auth_helper(mocker, auth)
+
+        assert auth_header == f"Basic {base64_string}"
+
+    @pytest.mark.asyncio
+    def test_send_with_bearer_auth(self, mocker: MockerFixture):
+        token = "token"
+        
+        auth = BearerAuthentication(token)
+        
+        auth_header = test_send_with_auth_helper(mocker, auth)
+
+        assert auth_header == f"Bearer {token}"
+
+    @pytest.mark.asyncio
+    def test_send_without_auth(self, mocker: MockerFixture):
+        auth_header = test_send_with_auth_helper(mocker, auth)
+
+        assert auth_header is None
