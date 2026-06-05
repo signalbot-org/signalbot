@@ -11,5 +11,5 @@ For persistent storage to disk, check the SQLite or Redis storage [page](./examp
 
 ## Authentication
 
-When running `signal-cli-rest-api` behind a auth-enabled proxy specify an authentication method using the `auth` config attribute.
+When running `signal-cli-rest-api` behind an auth-enabled proxy specify an authentication method using the `auth` config attribute.
 See [example](./examples/bot_config_options.md#authentication) for more details.
