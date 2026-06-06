@@ -7,6 +7,9 @@ class Authentication(Protocol):
     @property
     def header(self) -> str: ...
 
+    def write_header(self, headers: Dict[string, string]):
+        headers["Authorization"] = self.header
+
 class BasicAuthentication:
     def __init__(
         self,
