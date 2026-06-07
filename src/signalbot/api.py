@@ -437,7 +437,9 @@ class SignalAPI:
         ) as exc:
             raise RemoteDeleteError from exc
 
-    def _add_auth(self, headers: Dict[string, string] = {}):
+    def _add_auth(self, headers: Dict[string, string] | None = None) -> Dict[string, string] :
+        if headers is None:
+            headers = {}
         if self.auth is not None:
             self.auth.write_header(headers)
         return headers
