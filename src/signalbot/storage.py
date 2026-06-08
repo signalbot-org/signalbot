@@ -37,7 +37,7 @@ class StorageError(Exception):
 
 
 class SQLiteStorage(Storage):
-    def __init__(self, database: str | Path = ":memory:", **kwargs):  # noqa: ANN003, ANN204
+    def __init__(self, database: str | Path = ":memory:", **kwargs) -> None:  # noqa: ANN003
         self._sqlite = sqlite3.connect(database, **kwargs)
         self._sqlite.execute(
             "CREATE TABLE IF NOT EXISTS signalbot (key text unique, value text)",
@@ -79,7 +79,7 @@ class SQLiteStorage(Storage):
 
 
 class RedisStorage(Storage):
-    def __init__(self, host: str, port: int, password: str | None = None):  # noqa: ANN204
+    def __init__(self, host: str, port: int, password: str | None = None) -> None:
         self._redis = redis.Redis(host=host, port=port, db=0, password=password)
 
     def exists(self, key: str) -> bool:

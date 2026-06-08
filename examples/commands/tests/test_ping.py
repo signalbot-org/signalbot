@@ -1,9 +1,8 @@
 import pytest
 from pytest_mock import MockerFixture
 
+from examples.commands.ping import PingCommand
 from signalbot.utils import ChatTestCase, mock_chat
-
-from ..ping import PingCommand  # noqa: TID252
 
 
 class TestPingChatTest(ChatTestCase):

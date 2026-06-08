@@ -2,6 +2,7 @@ import functools
 import json
 import time
 import uuid
+from collections.abc import Callable
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock
 
@@ -11,10 +12,15 @@ from pytest_mock import MockerFixture
 from signalbot.bot import Command, Context, SignalBot
 
 
-def mock_chat(*messages: str):  # noqa: ANN201
-    def decorator_chat(func):  # noqa: ANN001, ANN202
+def mock_chat(*messages: str) -> None:
+    def decorator_chat(func: Callable) -> None:
         @functools.wraps(func)
-        async def wrapper_chat(self, mocker: MockerFixture, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+        async def wrapper_chat(
+            self,  # noqa: ANN001
+            mocker: MockerFixture,
+            *args: object,
+            **kwargs: object,
+        ) -> None:
             mocker.patch("signalbot.SignalAPI.react", new_callable=ReactMessageMock)
             mocker.patch("signalbot.SignalAPI.send", new_callable=SendMessagesMock)
             receive_mock = mocker.patch(
@@ -113,7 +119,7 @@ class ChatTestCase:
         return json.dumps(message)
 
     @classmethod
-    def new_message(cls, text) -> str:  # noqa: ANN001
+    def new_message(cls, text: str) -> str:
         timestamp = time.time()
         new_uuid = str(uuid.uuid4())
         message = {

@@ -9,7 +9,7 @@ import time
 import traceback
 import uuid
 from collections import defaultdict
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Coroutine, Mapping
 from typing import TYPE_CHECKING, Any, Literal, TypeAlias
 
 import phonenumbers
@@ -605,9 +605,10 @@ class SignalBot:
     def _is_valid_uuid(self, receiver_uuid: str) -> bool:
         try:
             uuid.UUID(str(receiver_uuid))
-            return True  # noqa: TRY300
         except ValueError:
             return False
+        else:
+            return True
 
     def _is_username(self, receiver_username: str) -> bool:  # noqa: PLR0911
         """
@@ -627,11 +628,12 @@ class SignalBot:
                 return False
             try:
                 digits = int(digits)
-                if digits == 0:  # noqa: SIM103
+                if digits == 0:
                     return False
-                return True  # noqa: TRY300
             except ValueError:
                 return False
+            else:
+                return True
         else:
             return False
 
@@ -665,7 +667,9 @@ class SignalBot:
         return None
 
     # see https://stackoverflow.com/questions/55184226/catching-exceptions-in-individual-tasks-and-restarting-them
-    async def _rerun_on_exception(self, coro, *args, **kwargs):  # noqa: ANN001, ANN002, ANN003, ANN202
+    async def _rerun_on_exception(
+        self, coro: Coroutine, *args: object, **kwargs: object
+    ) -> None:
         """Restart coroutine by waiting an exponential time deplay"""
         max_sleep = 5 * 60  # sleep for at most 5 mins until rerun
         reset = 3 * 60  # reset after 3 minutes running successfully

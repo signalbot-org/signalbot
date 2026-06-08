@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 
 from anyio import Path
 
@@ -50,8 +50,8 @@ class ReceiveDeleteCommand(CommandWithHelpMessage):
 
     async def handle(self, context: Context) -> None:
         if context.message.type == MessageType.DELETE_MESSAGE:
-            deleted_at = datetime.fromtimestamp(  # noqa: DTZ006
-                context.message.remote_delete_timestamp / 1000
+            deleted_at = datetime.fromtimestamp(
+                context.message.remote_delete_timestamp / 1000, tz=timezone.utc
             )
             message = f"You've deleted a message, which was sent at {deleted_at}."
             await context.send(message)

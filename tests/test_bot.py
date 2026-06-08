@@ -84,7 +84,7 @@ class TestGetter(TestCommon):
     @pytest.mark.asyncio
     async def test_get_group(self, mocker: MockerFixture):
         class GroupInspector(Command):
-            def __init__(self):  # noqa: ANN204
+            def __init__(self) -> None:
                 self.found_group = None
 
             async def handle(self, context: Context) -> None:
@@ -272,13 +272,13 @@ class TestRegisterCommand(TestCommon):
 
     def test_register_calls_setup_of_command(self):
         class SomeTestCommand(Command):
-            def __init__(self):  # noqa: ANN204
+            def __init__(self) -> None:
                 self.state = False
 
-            def setup(self):  # noqa: ANN202
+            def setup(self) -> None:
                 self.state = True
 
-            def handle(self, context: Context):  # noqa: ANN202
+            def handle(self, context: Context) -> None:
                 pass
 
         cmd = SomeTestCommand()

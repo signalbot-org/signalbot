@@ -124,41 +124,49 @@ class Message:
         """
         return bool(self.group)
 
+    @staticmethod
+    def _extract_sync_message(envelope: dict) -> tuple[MessageType, dict, int]:
+        target_sent_timestamp = None
+        sync_message = envelope["syncMessage"]
+
+        if sync_message == {}:
+            raise UnknownMessageFormatError
+
+        if "readMessages" in sync_message:
+            message_type = MessageType.READ_MESSAGE
+            data_message = {
+                "message": "",
+                "readMessages": sync_message["readMessages"],
+            }
+        elif "type" in sync_message:
+            if sync_message["type"] == "CONTACTS_SYNC":
+                message_type = MessageType.CONTACT_SYNC_MESSAGE
+                data_message = {"message": ""}
+                target_sent_timestamp = envelope.get("timestamp")
+            else:
+                raise UnknownMessageFormatError
+        else:
+            message_type = MessageType.SYNC_MESSAGE
+            data_message = sync_message["sentMessage"]
+
+        if "editMessage" in data_message:
+            message_type = MessageType.EDIT_MESSAGE
+            target_sent_timestamp = data_message["editMessage"]["targetSentTimestamp"]
+            data_message = data_message["editMessage"]["dataMessage"]
+
+        return (message_type, data_message, target_sent_timestamp)
+
     @classmethod
-    def _extract_message_data(  # noqa: C901, PLR0912
+    def _extract_message_data(  # nosqa: C901, PLR0912
         cls, envelope: dict
     ) -> tuple[MessageType, dict, int | None, int | None, str | None]:
         """Extract message type, data_message, and timestamps from envelope."""
         target_sent_timestamp = None
 
         if "syncMessage" in envelope:
-            sync_message = envelope["syncMessage"]
-            if sync_message == {}:
-                raise UnknownMessageFormatError
-
-            if "readMessages" in sync_message:
-                message_type = MessageType.READ_MESSAGE
-                data_message = {
-                    "message": "",
-                    "readMessages": sync_message["readMessages"],
-                }
-            elif "type" in sync_message:
-                if sync_message["type"] == "CONTACTS_SYNC":
-                    message_type = MessageType.CONTACT_SYNC_MESSAGE
-                    data_message = {"message": ""}
-                    target_sent_timestamp = envelope.get("timestamp")
-                else:
-                    raise UnknownMessageFormatError
-            else:
-                message_type = MessageType.SYNC_MESSAGE
-                data_message = sync_message["sentMessage"]
-
-            if "editMessage" in data_message:
-                message_type = MessageType.EDIT_MESSAGE
-                target_sent_timestamp = data_message["editMessage"][
-                    "targetSentTimestamp"
-                ]
-                data_message = data_message["editMessage"]["dataMessage"]
+            message_type, data_message, target_sent_timestamp = (
+                cls._extract_sync_message(envelope)
+            )
 
         elif "dataMessage" in envelope:
             message_type = MessageType.DATA_MESSAGE

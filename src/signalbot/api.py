@@ -29,13 +29,13 @@ HEALTH_CHECK_GOOD_STATUS = 204
 
 
 class SignalAPI:
-    def __init__(  # noqa: ANN204
+    def __init__(
         self,
         signal_service: str,
         phone_number: str,
         download_attachments: bool = True,  # noqa: FBT001, FBT002
         connection_mode: ConnectionMode = ConnectionMode.AUTO,
-    ):
+    ) -> None:
         self.phone_number = phone_number
         self.connection_mode = connection_mode
         use_https = connection_mode in (ConnectionMode.HTTPS_ONLY, ConnectionMode.AUTO)
@@ -263,9 +263,8 @@ class SignalAPI:
             raise GetAttachmentError from exc
 
         base64_bytes = base64.b64encode(content)
-        base64_string = str(base64_bytes, encoding="utf-8")
 
-        return base64_string  # noqa: RET504
+        return str(base64_bytes, encoding="utf-8")
 
     async def delete_attachment(self, attachment_id: str) -> str:
         uri = f"{self._signal_api_uris.attachment_rest_uri()}/{attachment_id}"
@@ -411,7 +410,12 @@ class SignalAPI:
 
 
 class SignalAPIURIs:
-    def __init__(self, signal_service: str, phone_number: str, use_https: bool = True):  # noqa: ANN204, FBT001, FBT002
+    def __init__(
+        self,
+        signal_service: str,
+        phone_number: str,
+        use_https: bool = True,  # noqa: FBT001, FBT002
+    ) -> None:
         self.signal_service = signal_service
         self.phone_number = phone_number
         self.use_https = use_https
