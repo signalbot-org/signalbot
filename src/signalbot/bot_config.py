@@ -8,6 +8,7 @@ import yaml
 from pydantic import BaseModel
 
 from signalbot.api import ConnectionMode
+from signalbot.auth import Authentication  # noqa: TC001
 
 
 class RedisConfig(BaseModel):
@@ -53,34 +54,6 @@ class InMemoryConfig(BaseModel):
     type: Literal["in-memory"] = "in-memory"
 
 
-class BasicAuthenticationConfig(BaseModel):
-    """
-    The configuration for BasicAuthentication backend.
-
-    Attributes:
-        type: The type of authentication.
-        username: The username for the authentication.
-        password: The password used for authentication.
-    """
-
-    type: Literal["basic"] = "basic"
-    username: str
-    password: str
-
-
-class BearerAuthenticationConfig(BaseModel):
-    """
-    The configuration for BearerAuthentication backend.
-
-    Attributes:
-        type: The type of authentication.
-        toke: The token used for authentication.
-    """
-
-    type: Literal["bearer"] = "bearer"
-    token: str
-
-
 class Config(BaseModel):
     """
     The configuration for SignalBot.
@@ -100,7 +73,7 @@ class Config(BaseModel):
 
     signal_service: str
     phone_number: str
-    auth: BasicAuthenticationConfig | BearerAuthenticationConfig | None = None
+    auth: Authentication | None = None
 
     storage: RedisConfig | SQLiteConfig | InMemoryConfig | None = None
     retry_interval: int = 1

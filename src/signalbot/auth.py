@@ -1,25 +1,28 @@
 from __future__ import annotations
 
 import base64
-from typing import Protocol
+
+from pydantic import BaseModel
 
 
-class Authentication(Protocol):
+class Authentication(BaseModel):
     @property
-    def header(self) -> str: ...
+    def header(self) -> str:
+        raise NotImplementedError
 
     def write_header(self, headers: dict[str, str]) -> None:
         headers["Authorization"] = self.header
 
 
 class BasicAuthentication(Authentication):
-    def __init__(
-        self,
-        username: str,
-        password: str,
-    ) -> None:
-        self.username = username
-        self.password = password
+    """
+    Attributes:
+        username: The username for the authentication.
+        password: The password used for authentication.
+    """
+
+    username: str
+    password: str
 
     @property
     def header(self) -> str:
@@ -29,11 +32,13 @@ class BasicAuthentication(Authentication):
 
 
 class BearerAuthentication(Authentication):
-    def __init__(
-        self,
-        token: str,
-    ) -> None:
-        self.token = token
+    """
+    Attributes:
+        type: The type of authentication.
+        token: The token used for authentication.
+    """
+
+    token: str
 
     @property
     def header(self) -> str:

@@ -233,7 +233,7 @@ class TestAPI:
         credentials = f"{username}:{password}".encode()
         credential_string = base64.b64encode(credentials).decode("utf-8")
 
-        auth = BasicAuthentication(username, password)
+        auth = BasicAuthentication(username=username, password=password)
 
         auth_header = await self._send_with_auth_helper(mocker, auth)
 
@@ -243,7 +243,7 @@ class TestAPI:
     async def test_send_with_bearer_auth(self, mocker: MockerFixture):
         token = "token"  # noqa: S105
 
-        auth = BearerAuthentication(token)
+        auth = BearerAuthentication(token=token)
 
         auth_header = await self._send_with_auth_helper(mocker, auth)
 
