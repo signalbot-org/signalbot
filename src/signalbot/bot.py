@@ -17,7 +17,10 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from packaging.version import Version
 
 from signalbot.api import ReceiveMessagesError, SignalAPI
+from signalbot.auth import Authentication, BasicAuthentication, BearerAuthentication
 from signalbot.bot_config import (
+    BasicAuthenticationConfig,
+    BearerAuthenticationConfig,
     Config,
     InMemoryConfig,
     RedisConfig,
@@ -117,11 +120,20 @@ class SignalBot:
 
         self.init_task: None | asyncio.Task = None
 
+        self.auth: Authentication | None = None
+
+        if isinstance(self.config.auth, BasicAuthenticationConfig):
+            self.auth = BasicAuthentication(
+                self.config.auth.username, self.config.auth.password
+            )
+        elif isinstance(self.config.auth, BearerAuthenticationConfig):
+            self.auth = BearerAuthentication(self.config.auth.token)
+
         try:
             self._signal = SignalAPI(
                 self.config.signal_service,
                 self.config.phone_number,
-                self.config.auth,
+                self.auth,
                 self.config.download_attachments,
                 self.config.connection_mode,
             )
