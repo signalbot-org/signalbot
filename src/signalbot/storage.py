@@ -90,9 +90,10 @@ class RedisStorage(Storage):
             result_bytes = self._redis.get(key)
             result_str = result_bytes.decode("utf-8")
             result_dict = json.loads(result_str)
-            return result_dict  # noqa: RET504, TRY300
         except Exception as e:  # noqa: BLE001
             raise StorageError(f"Redis load failed: {e}")  # noqa: B904, EM102, TRY003
+        else:
+            return result_dict
 
     def save(self, key: str, object: Any) -> None:  # noqa: A002, ANN401
         try:
