@@ -34,7 +34,6 @@ class BasicAuthentication(Authentication):
 class BearerAuthentication(Authentication):
     """
     Attributes:
-        type: The type of authentication.
         token: The token used for authentication.
     """
 
