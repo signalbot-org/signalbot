@@ -140,8 +140,6 @@ class SignalBot:
                 auth,
                 self.config.download_attachments,
                 self.config.connection_mode,
-                self.config.ping_interval,
-                self.config.ping_timeout,
             )
         except KeyError:
             raise SignalBotError("Could not initialize SignalAPI with given config")  # noqa: B904, EM101, TRY003

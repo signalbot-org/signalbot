@@ -63,18 +63,6 @@ class TestLoadConfig:
         assert isinstance(config.storage, RedisConfig)
         assert config.storage.redis_password == "secret"  # noqa: S105
 
-    def test_keepalive_defaults(self):
-        config = load_config(self._dict_config)
-        assert config.ping_interval == 20  # noqa: PLR2004
-        assert config.ping_timeout == 20  # noqa: PLR2004
-
-    def test_load_config_from_dict_with_keepalive(self):
-        self._dict_config["ping_interval"] = 5
-        self._dict_config["ping_timeout"] = None
-        config = load_config(self._dict_config)
-        assert config.ping_interval == 5  # noqa: PLR2004
-        assert config.ping_timeout is None
-
     def test_load_config_from_json_file(self):
         self._config.retry_interval = 3
         self._config.download_attachments = False

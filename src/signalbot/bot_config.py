@@ -96,13 +96,6 @@ class Config(BaseModel):
             `True`.
         connection_mode: The connection mode to use when connecting to the Signal
             service. Defaults to `ConnectionMode.AUTO`.
-        ping_interval: The interval in seconds between keepalive pings on the
-            receive websocket. Keepalive pings detect half-open connections so
-            the bot can reconnect instead of hanging silently. Set to `None` to
-            disable. Defaults to `20`.
-        ping_timeout: The number of seconds to wait for a pong before considering
-            the receive websocket dead and reconnecting. Set to `None` to
-            disable. Defaults to `20`.
     """
 
     signal_service: str
@@ -113,8 +106,6 @@ class Config(BaseModel):
     retry_interval: int = 1
     download_attachments: bool = True
     connection_mode: ConnectionMode = ConnectionMode.AUTO
-    ping_interval: float | None = 20
-    ping_timeout: float | None = 20
 
 
 def load_config(config: Config | Mapping | Path | str) -> Config:

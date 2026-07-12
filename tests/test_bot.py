@@ -32,24 +32,6 @@ class TestCommon:
         self.signal_bot = SignalBot(config)
 
 
-class TestKeepaliveWiring(TestCommon):
-    def test_default_keepalive_passed_to_signal_api(self):
-        assert self.signal_bot._signal.ping_interval == 20  # noqa: PLR2004
-        assert self.signal_bot._signal.ping_timeout == 20  # noqa: PLR2004
-
-    def test_custom_keepalive_passed_to_signal_api(self):
-        config = {
-            "signal_service": self.signal_service,
-            "phone_number": self.phone_number,
-            "storage": {"type": "in-memory"},
-            "ping_interval": 5,
-            "ping_timeout": None,
-        }
-        signal_bot = SignalBot(config)
-        assert signal_bot._signal.ping_interval == 5  # noqa: PLR2004
-        assert signal_bot._signal.ping_timeout is None
-
-
 class TestProducer(TestCommon):
     @pytest.mark.asyncio
     async def test_produce(self, mocker: MockerFixture):

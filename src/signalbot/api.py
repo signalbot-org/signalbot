@@ -31,21 +31,17 @@ HEALTH_CHECK_GOOD_STATUS = 204
 
 
 class SignalAPI:
-    def __init__(  # noqa: ANN204, PLR0913
+    def __init__(  # noqa: ANN204
         self,
         signal_service: str,
         phone_number: str,
         auth: Authentication | None = None,
         download_attachments: bool = True,  # noqa: FBT001, FBT002
         connection_mode: ConnectionMode = ConnectionMode.AUTO,
-        ping_interval: float | None = 20,
-        ping_timeout: float | None = 20,
     ):
         self.phone_number = phone_number
         self.auth = auth
         self.connection_mode = connection_mode
-        self.ping_interval = ping_interval
-        self.ping_timeout = ping_timeout
         use_https = connection_mode in (ConnectionMode.HTTPS_ONLY, ConnectionMode.AUTO)
         self._signal_api_uris = SignalAPIURIs(
             signal_service=signal_service,
@@ -59,14 +55,9 @@ class SignalAPI:
 
         try:
             uri = self._signal_api_uris.receive_ws_uri()
-            # Keepalive pings detect half-open connections so the receive loop
-            # raises and the bot's reconnect logic can kick in.
-            self.connection = websockets.connect(
-                uri,
-                ping_interval=self.ping_interval,
-                ping_timeout=self.ping_timeout,
-                additional_headers=headers,
-            )
+            # Rely on the websockets library's default keepalive pings so a
+            # half-open connection raises and the bot's reconnect logic kicks in.
+            self.connection = websockets.connect(uri, additional_headers=headers)
             async with self.connection as websocket:
                 async for raw_message in websocket:
                     yield raw_message
