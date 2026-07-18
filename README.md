@@ -10,7 +10,7 @@
 Python package to build your own Signal bots.
 
 > [!IMPORTANT]
-> Signalbot v2 is being developed at  https://github.com/signalbot-org/signalbot/tree/v2.0.
+> Signalbot v2 is being developed at https://github.com/signalbot-org/signalbot/tree/v2.0.
 > Feedback on the direction is welcomed in https://github.com/signalbot-org/signalbot/issues/234
 
 ## Installation
