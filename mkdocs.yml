@@ -24,6 +24,7 @@ nav:
       - Quote: reference/quote.md
       - Reaction: reference/reaction.md
       - Authentication: reference/auth.md
+      - Storage: reference/storage.md
   - Troubleshooting: troubleshooting.md
   - Contributing: local_development.md
 
