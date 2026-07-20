@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from inspect import iscoroutine
 from typing import Any
 
 from pydantic import (
@@ -42,6 +43,31 @@ def _serialize_send_message_v2_payload(
     return payload
 
 
+async def await_items_in_payload(payload: dict[str, Any]) -> None:
+    await _await_items_in_payload(payload)
+
+
+async def _await_items_in_payload(
+    payload: dict[str, Any] | list,
+) -> dict[str, Any] | list:
+    """
+    Traverse the whole dictionary and wait for any coroutine values to resolve them.
+    """
+    if isinstance(payload, list):
+        for i, value in enumerate(payload):
+            if isinstance(value, (dict, list)):
+                payload[i] = await _await_items_in_payload(value)
+            elif iscoroutine(value):
+                payload[i] = await value
+    else:
+        for key, value in payload.items():
+            if isinstance(value, (dict, list)):
+                payload[key] = await _await_items_in_payload(value)
+            elif iscoroutine(value):
+                payload[key] = await value
+    return payload
+
+
 class SendMessage(BaseModel):
     base64_attachments: list[str] | None = None
     attachments: list[PydanticPath] | None = None
@@ -78,9 +104,6 @@ class SendMessage(BaseModel):
                 recipient=self.recipient,
             )
 
-            # Validate the payload using the original request type
-            SendMessageV2.model_validate(payload)
-
         return payload
 
 
@@ -99,9 +122,6 @@ class SendMessageMultiple(SendMessageV2):
                 payload,
                 attachments=self.attachments,
             )
-
-            # Validate the payload using the original request type
-            SendMessageV2.model_validate(payload)
 
         return payload
 
