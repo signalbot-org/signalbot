@@ -19,6 +19,7 @@ nav:
       - Config: reference/bot_config.md
       - Message: reference/message.md
       - Context: reference/context.md
+      - Storage: reference/storage.md
       - LinkPreview: reference/linkpreview.md
       - Command: reference/command.md
       - Quote: reference/quote.md
