@@ -7,7 +7,9 @@ It does not have any handlers attached, for convenience the [signalbot.enable_co
 
 By default the storage attribute of the [signalbot.SignalBot][] class is in-memory.
 Any changes are lost when the bot is stopped or reseted.
-For persistent storage to disk, check the SQLite or Redis storage [page](./examples/bot_config_options.md#storage-type-options).
+For persistent storage, see the [SQLiteStorage][signalbot.storage.SQLiteStorage] and
+[RedisStorage][signalbot.storage.RedisStorage] API references and the
+[storage configuration examples](./examples/bot_config_options.md#storage-type-options).
 
 ## Authentication
 

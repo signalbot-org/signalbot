@@ -94,7 +94,7 @@ storage:
 ### SQLite
 
 Persists data to a local SQLite database.
-Have a look at the [SQLiteStorage](https://github.com/signalbot-org/signalbot/blob/b2a2ec15c3632580230e004455815ce509c2666d/src/signalbot/storage.py#L39) class for how to store and retrive the data.
+See the [SQLiteStorage][signalbot.storage.SQLiteStorage] API reference for details.
 
 ```yaml title="config.yml"
 signal_service: "http://localhost:8080"
@@ -107,7 +107,7 @@ storage:
 ### Redis
 
 Persists data to Redis database.
-Have a look at the [RedisStorage](https://github.com/signalbot-org/signalbot/blob/b2a2ec15c3632580230e004455815ce509c2666d/src/signalbot/storage.py#L81) class for how to store and retrive the data.
+See the [RedisStorage][signalbot.storage.RedisStorage] API reference for details.
 
 ```yaml title="config.yml"
 signal_service: "http://localhost:8080"
