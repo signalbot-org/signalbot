@@ -208,6 +208,7 @@ class GetAllMock(AsyncMock):
                 id=ChatTestCase.group_id,
                 internal_id=ChatTestCase.group_internal_id,
                 invite_link="",
+                member=True,
                 members=[],
                 name=ChatTestCase.group_name,
                 pending_invites=[],
@@ -228,7 +229,7 @@ class AboutMock(AsyncMock):
             build=1,
             capabilities={},
             mode="json-rpc",
-            version="0.97",
+            version="0.100.0",
             versions=["v1"],
         )
 

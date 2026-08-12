@@ -15,6 +15,7 @@ class GroupEntry(BaseModel):
     id: str
     internal_id: str
     invite_link: str
+    member: bool
     members: list[str]
     name: str
     pending_invites: list[str]

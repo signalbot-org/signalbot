@@ -76,6 +76,7 @@ def fake_group() -> dict:
         "id": GROUP_ID,
         "internal_id": GROUP_INTERNAL_ID,
         "invite_link": "",
+        "member": True,
         "members": [],
         "pending_invites": [],
         "pending_requests": [],

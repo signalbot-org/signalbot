@@ -36,7 +36,7 @@ if TYPE_CHECKING:
     from signalbot.messages import ReceivedMessage
     from signalbot.storage import RedisStorage, SQLiteStorage
 
-MIN_SIGNAL_CLI_REST_API_VERSION = Version("0.95.0")
+MIN_SIGNAL_CLI_REST_API_VERSION = Version("0.100.0")
 """
 The minimum required version of `signal-cli-rest-api` for this version of `signalbot`.
 """

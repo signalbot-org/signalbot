@@ -64,7 +64,7 @@
                     "type": "string"
                 },
                 "recipient": {
-                    "example": "\u003cphone number\u003e OR \u003cusername\u003e OR \u003cgroup id\u003e",
+                    "example": "<phone number> OR <username> OR <group id>",
                     "type": "string"
                 }
             },
@@ -149,7 +149,7 @@
                     "type": "string"
                 },
                 "recipient": {
-                    "example": "\u003cphone number\u003e OR \u003cusername\u003e OR \u003cgroup id\u003e",
+                    "example": "<phone number> OR <username> OR <group id>",
                     "type": "string"
                 }
             },
@@ -239,7 +239,7 @@
                     "type": "string"
                 },
                 "challenge_token": {
-                    "example": "\u003cchallenge token\u003e",
+                    "example": "<challenge token>",
                     "type": "string"
                 }
             },
@@ -381,7 +381,7 @@
         "api.SendMessageV1": {
             "properties": {
                 "base64_attachment": {
-                    "example": "'\u003cBASE64 ENCODED DATA\u003e' OR 'data:\u003cMIME-TYPE\u003e;base64,\u003cBASE64 ENCODED DATA\u003e' OR 'data:\u003cMIME-TYPE\u003e;filename=\u003cFILENAME\u003e;base64,\u003cBASE64 ENCODED DATA\u003e'",
+                    "example": "'<BASE64 ENCODED DATA>' OR 'data:<MIME-TYPE>;base64,<BASE64 ENCODED DATA>' OR 'data:<MIME-TYPE>;filename=<FILENAME>;base64,<BASE64 ENCODED DATA>'",
                     "type": "string"
                 },
                 "is_group": {
@@ -411,9 +411,9 @@
             "properties": {
                 "base64_attachments": {
                     "example": [
-                        "\u003cBASE64 ENCODED DATA\u003e",
-                        "data:\u003cMIME-TYPE\u003e;base64\u003ccomma\u003e\u003cBASE64 ENCODED DATA\u003e",
-                        "data:\u003cMIME-TYPE\u003e;filename=\u003cFILENAME\u003e;base64\u003ccomma\u003e\u003cBASE64 ENCODED DATA\u003e"
+                        "<BASE64 ENCODED DATA>",
+                        "data:<MIME-TYPE>;base64<comma><BASE64 ENCODED DATA>",
+                        "data:<MIME-TYPE>;filename=<FILENAME>;base64<comma><BASE64 ENCODED DATA>"
                     ],
                     "items": {
                         "type": "string"
@@ -686,7 +686,7 @@
         "api.VoteRequest": {
             "properties": {
                 "poll_author": {
-                    "example": "\u003cphone number\u003e OR \u003cuuid\u003e",
+                    "example": "<phone number> OR <uuid>",
                     "type": "string"
                 },
                 "poll_timestamp": {
@@ -694,7 +694,7 @@
                     "type": "string"
                 },
                 "recipient": {
-                    "example": "\u003cphone number\u003e OR \u003cusername\u003e OR \u003cgroup id\u003e",
+                    "example": "<phone number> OR <username> OR <group id>",
                     "type": "string"
                 },
                 "selected_answers": {
@@ -801,6 +801,9 @@
                 "invite_link": {
                     "type": "string"
                 },
+                "member": {
+                    "type": "boolean"
+                },
                 "members": {
                     "items": {
                         "type": "string"
@@ -833,6 +836,7 @@
                 "id",
                 "internal_id",
                 "invite_link",
+                "member",
                 "members",
                 "name",
                 "pending_invites",
@@ -2355,7 +2359,7 @@
         "contact": {},
         "description": "This is the Signal Cli REST API documentation.",
         "title": "Signal Cli REST API",
-        "version": "0.100dev"
+        "version": "1a2da6c"
     },
     "paths": {
         "/v1/about": {
@@ -4828,7 +4832,7 @@
                 "consumes": [
                     "application/json"
                 ],
-                "description": "In order to add a sticker pack, browse to https://signalstickers.org/ and select the sticker pack you want to add. Then, press the \"Add to Signal\" button. If you look at the address bar in your browser you should see an URL in this format: https://signal.art/addstickers/#pack_id=XXX\u0026pack_key=YYY, where XXX is the pack_id and YYY is the pack_key.",
+                "description": "In order to add a sticker pack, browse to https://signalstickers.org/ and select the sticker pack you want to add. Then, press the \"Add to Signal\" button. If you look at the address bar in your browser you should see an URL in this format: https://signal.art/addstickers/#pack_id=XXX&pack_key=YYY, where XXX is the pack_id and YYY is the pack_key.",
                 "parameters": [
                     {
                         "description": "Registered Phone Number",
