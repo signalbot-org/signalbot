@@ -2,7 +2,6 @@
 authors = [{name = "René Filip"}]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
 ]
 description = "Framework to create your own Signal bots"
