@@ -11,7 +11,8 @@ keywords = [
   "Framework",
   "Home Automation",
 ]
-license = { text = "MIT" }
+license = "MIT"
+license-files = ["LICENSE"]
 maintainers = [{name = "René Filip"}, {name = "Gara Dorta"}]
 name = "signalbot"
 readme = "README.md"
