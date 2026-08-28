@@ -84,7 +84,7 @@ pymdownx.keys = {}
 pymdownx.magiclink = {}
 pymdownx.mark = {}
 pymdownx.smartsymbols = {}
-pymdownx.snippets = {} # Enable --8<-- code includes
+pymdownx.snippets = {}  # Enable --8<-- code includes
 pymdownx.superfences = {
   custom_fences = [
     {
@@ -118,7 +118,7 @@ options = {
   merge_init_into_class = true,
   show_signature_annotations = true,
   signature_crossrefs = true,
-  extensions = [ { griffe_pydantic = {} } ]
+  extensions = [{ griffe_pydantic = {} }],
 }
 
 [project.extra.version]

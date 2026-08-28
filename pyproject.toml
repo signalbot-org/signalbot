@@ -1,150 +1,66 @@
 [project]
-authors = [{name = "René Filip"}]
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent",
-]
+name = "signalbot"
+version = "2.0.0"
 description = "Framework to create your own Signal bots"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "René Filip" }]
+maintainers = [{ name = "René Filip" }, { name = "Gara Dorta" }]
 keywords = [
-  "Signal",
   "Bot",
   "Framework",
   "Home Automation",
+  "Signal",
 ]
-license = "MIT"
-license-files = ["LICENSE"]
-maintainers = [{name = "René Filip"}, {name = "Gara Dorta"}]
-name = "signalbot"
-readme = "README.md"
-requires-python = ">=3.11"
-version = "2.0.0"
+classifiers = [
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+]
 dependencies = [
   "APScheduler>=3.11.0",
   "aiohttp>=3.11.9",
-  "websockets>=14.1",
+  "anyio>=4.13.0",
+  "packaging>=25.0",
   "phonenumbers>=8.13.54",
   "pydantic>=2.12.3",
-  "packaging>=25.0",
   "pyyaml>=6.0.3",
-  "anyio>=4.13.0",
+  "websockets>=14.1",
 ]
+
+[project.urls]
+repository = "https://github.com/signalbot-org/signalbot"
 
 [project.optional-dependencies]
 redis = ["redis>=5.2.0"]
 
 [dependency-groups]
 dev = [
+  "datamodel-code-generator>=0.58.0",
   "prek>=0.3.0",
   "pytest>=8.4.2",
   "pytest-asyncio>=1.2.0",
-  "pytest-mock>=3.15.1",
   "pytest-cov>=7.0.0",
-  "datamodel-code-generator>=0.58.0",
-  "ty>=0.0.69",
+  "pytest-mock>=3.15.1",
   "redis>=5.2.0",
+  "ty>=0.0.69",
 ]
 docs = [
-  "zensical>=0.0.53",
-  "mkdocstrings-python>=2.0.5",
-  "mike",
-  "ruff>=0.15.1",
   "griffe-pydantic>=1.3.1",
+  "mike",
+  "mkdocstrings-python>=2.0.5",
+  "ruff>=0.15.1",
+  "zensical>=0.0.53",
 ]
 examples = [
   "anyio>=4.12.1",
   "typer>=0.23.2",
 ]
 
-[project.urls]
-repository = "https://github.com/signalbot-org/signalbot"
-
 [build-system]
 requires = ["uv_build>=0.9.26,<0.12.0"]
 build-backend = "uv_build"
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"
-pythonpath = ["."]
-
-[[tool.uv.index]]
-name = "testpypi"
-url = "https://test.pypi.org/simple/"
-publish-url = "https://test.pypi.org/legacy/"
-explicit = true
-
-[tool.uv.sources]
-# Zensical only supports versioning through its own fork of mike; the
-# upstream PyPI package is built for mkdocs. See
-# https://zensical.org/docs/setup/versioning/
-mike = { git = "https://github.com/squidfunk/mike.git" }
-
-[tool.ruff.lint]
-select = ["ALL"]
-ignore = [
-  "D",   # Docstrings
-  "FIX", # TODO, FIXME and other messages
-  "ERA001", # Commented out code
-  "COM812", # Trailing commas, the formatter already does this
-  "CPY001", # Per-file copyright headers; licensing is covered by LICENSE
-]
-
-[tool.ruff.lint.per-file-ignores]
-# Tests can ignore a few extra rules
-"**/tests/**.py" = [
-    "ANN001", # Missing type annotation for function argument
-    "ANN002", # Missing type annotation for *args
-    "ANN003", # Missing type annotation for **kwargs
-    "ANN201", # Missing return type annotation for public function
-    "ANN202", # Missing return type annotation for private function
-    "ANN204", # Missing return type annotation for special method
-    "ARG002", # Unused method argument (pytest-mock fixtures/decorator passthrough)
-    "E501",   # Line too long (long JSON fixture literals)
-    "PLR2004", # Magic value used in comparison (test assertion literals)
-    "S101",   # Use of assert is detected
-    "S105",   # Possible hardcoded password (dummy test credentials)
-    "S106",   # Possible hardcoded password (dummy test credentials)
-    "INP001", # Missing __init__.py file
-    "SLF001", # Access private attributes
-]
-
-# Testing helpers shipped for downstream users' test suites; reaching into the
-# bot's internals is the point.
-"src/signalbot/test_utils/**.py" = [
-    "SLF001", # Access private attributes
-]
-
-# Examples print directly to stdout for the person running them locally.
-"examples/**.py" = [
-    "T201", # `print` found
-]
-
-# Ignore line too long for the generated models, since they are generated and not meant to be edited by hand.
-# Also exempt them from the banned-api rule below: the generated tree's own submodules
-# legitimately import from each other.
-"**/_generated/**.py" = [
-    "E501",
-    "TID251",
-]
-
-[tool.ruff.lint.flake8-tidy-imports.banned-api]
-"signalbot._generated.api".msg = "Import generated models from signalbot._generated instead."
-"signalbot._generated.client".msg = "Import generated models from signalbot._generated instead."
-"signalbot._generated.data".msg = "Import generated models from signalbot._generated instead."
-"signalbot._generated.receive".msg = "Import generated models from signalbot._generated instead."
-
-[tool.ruff.lint.flake8-type-checking]
-runtime-evaluated-base-classes = [
-  "pydantic.BaseModel",
-  "signalbot._events.BaseMessage",
-  "signalbot._events.BaseMessageWithGroup",
-  "signalbot._generated.Preview",
-  "signalbot._generated.QuotedAttachment",
-]
-
-[tool.yamlfix]
-explicit_start = false
-whitelines = 1
-line_length = 120 # This should be 88 but the formatter breaks some }} in the github workflows.
 
 [tool.datamodel-codegen.profiles.signal-cli-rest-api]
 input = "src/signalbot/_generated/json_schema/signal-cli-rest-api.json"
@@ -165,3 +81,91 @@ no-use-type-checking-imports = true
 all-exports-scope = "recursive"
 all-exports-collision-strategy = "minimal-prefix"
 output = "src/signalbot/_generated"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+  "D",  # Docstrings
+  "FIX",  # TODO, FIXME and other messages
+  "ERA001",  # Commented out code
+  "COM812",  # Trailing commas, the formatter already does this
+  "CPY001",  # Per-file copyright headers; licensing is covered by LICENSE
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests can ignore a few extra rules
+"**/tests/**.py" = [
+  "ANN001",  # Missing type annotation for function argument
+  "ANN002",  # Missing type annotation for *args
+  "ANN003",  # Missing type annotation for **kwargs
+  "ANN201",  # Missing return type annotation for public function
+  "ANN202",  # Missing return type annotation for private function
+  "ANN204",  # Missing return type annotation for special method
+  "ARG002",  # Unused method argument (pytest-mock fixtures/decorator passthrough)
+  "E501",  # Line too long (long JSON fixture literals)
+  "PLR2004",  # Magic value used in comparison (test assertion literals)
+  "S101",  # Use of assert is detected
+  "S105",  # Possible hardcoded password (dummy test credentials)
+  "S106",  # Possible hardcoded password (dummy test credentials)
+  "INP001",  # Missing __init__.py file
+  "SLF001",  # Access private attributes
+]
+
+# Testing helpers shipped for downstream users' test suites; reaching into the
+# bot's internals is the point.
+"src/signalbot/test_utils/**.py" = [
+  "SLF001",  # Access private attributes
+]
+
+# Examples print directly to stdout for the person running them locally.
+"examples/**.py" = [
+  "T201",  # `print` found
+]
+
+# Ignore line too long for the generated models, since they are generated and not meant to be edited by hand.
+# Also exempt them from the banned-api rule below: the generated tree's own submodules
+# legitimately import from each other.
+"**/_generated/**.py" = [
+  "E501",
+  "TID251",
+]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"signalbot._generated.api".msg = "Import generated models from signalbot._generated instead."
+"signalbot._generated.client".msg = "Import generated models from signalbot._generated instead."
+"signalbot._generated.data".msg = "Import generated models from signalbot._generated instead."
+"signalbot._generated.receive".msg = "Import generated models from signalbot._generated instead."
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-base-classes = [
+  "pydantic.BaseModel",
+  "signalbot._events.BaseMessage",
+  "signalbot._events.BaseMessageWithGroup",
+  "signalbot._generated.Preview",
+  "signalbot._generated.QuotedAttachment",
+]
+
+[tool.tombi]
+toml-version = "v1.1.0"
+files.exclude = ["uv.lock"]
+
+[[tool.uv.index]]
+name = "testpypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true
+
+[tool.uv.sources]
+# Zensical only supports versioning through its own fork of mike; the
+# upstream PyPI package is built for mkdocs. See
+# https://zensical.org/docs/setup/versioning/
+mike = { git = "https://github.com/squidfunk/mike.git" }
+
+[tool.yamlfix]
+explicit_start = false
+whitelines = 1
+line_length = 120  # This should be 88 but the formatter breaks some }} in the github workflows.
