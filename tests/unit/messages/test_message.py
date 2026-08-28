@@ -19,6 +19,7 @@ from signalbot.reactions import Reaction
 
 ACCOUNT = "+49987654321"
 SOURCE = "+490123456789"
+DESTINATION = "+49000111222"
 TIMESTAMP = 1632576001632
 TEXT = "Uhrzeit"
 GROUP_ID = "<groupid>"
@@ -77,6 +78,21 @@ RAW_SYNC_MESSAGE = envelope(
     }
 )
 
+RAW_SYNC_MESSAGE_PRIVATE_CONVERSATION = envelope(
+    syncMessage={
+        "sentMessage": {
+            "destination": DESTINATION,
+            "destinationNumber": DESTINATION,
+            "destinationUuid": "<uuid>",
+            "timestamp": TIMESTAMP,
+            "message": TEXT,
+            "expiresInSeconds": 0,
+            "isExpirationUpdate": False,
+            "viewOnce": False,
+        }
+    }
+)
+
 RAW_DATA_MESSAGE = envelope(
     dataMessage={
         "timestamp": TIMESTAMP,
@@ -117,6 +133,29 @@ RAW_REACTION_MESSAGE = envelope(
     },
 )
 
+RAW_REACTION_SYNC_MESSAGE_MESSAGE_PRIVATE_CONVERSATION = envelope(
+    syncMessage={
+        "sentMessage": {
+            "destination": DESTINATION,
+            "destinationNumber": DESTINATION,
+            "destinationUuid": "<uuid>",
+            "timestamp": TIMESTAMP,
+            "message": None,
+            "expiresInSeconds": 0,
+            "isExpirationUpdate": False,
+            "viewOnce": False,
+            "reaction": {
+                "emoji": "👍",
+                "targetAuthor": "<target>",
+                "targetAuthorNumber": "<target>",
+                "targetAuthorUuid": "<uuid>",
+                "targetSentTimestamp": TIMESTAMP,
+                "isRemove": False,
+            },
+        }
+    },
+)
+
 RAW_EDIT_MESSAGE = envelope(
     timestamp=1632576001700,
     editMessage={
@@ -127,6 +166,27 @@ RAW_EDIT_MESSAGE = envelope(
             "expiresInSeconds": 0,
             "viewOnce": False,
         },
+    },
+)
+
+RAW_EDIT_MESSAGE_SYNC_MESSAGE_PRIVATE_CONVERSATION = envelope(
+    timestamp=1632576001700,
+    syncMessage={
+        "sentMessage": {
+            "destination": DESTINATION,
+            "destinationNumber": DESTINATION,
+            "destinationUuid": "<uuid>",
+            "editMessage": {
+                "targetSentTimestamp": TIMESTAMP,
+                "dataMessage": {
+                    "timestamp": 1632576001700,
+                    "message": "Uhrzeit!",
+                    "expiresInSeconds": 0,
+                    "isExpirationUpdate": False,
+                    "viewOnce": False,
+                },
+            },
+        }
     },
 )
 
@@ -211,6 +271,22 @@ RAW_REMOTE_DELETE_SYNC_MESSAGE = envelope(
     }
 )
 
+RAW_REMOTE_DELETE_SYNC_MESSAGE_PRIVATE_CONVERSATION = envelope(
+    syncMessage={
+        "sentMessage": {
+            "destination": DESTINATION,
+            "destinationNumber": DESTINATION,
+            "destinationUuid": "<uuid>",
+            "timestamp": TIMESTAMP,
+            "message": None,
+            "expiresInSeconds": 0,
+            "isExpirationUpdate": False,
+            "viewOnce": False,
+            "remoteDelete": {"timestamp": REMOTE_DELETE_TIMESTAMP},
+        }
+    }
+)
+
 RAW_GROUP_UPDATE_MESSAGE = envelope(
     timestamp=1768100104294,
     server_received_timestamp=1768100103544,
@@ -238,12 +314,12 @@ RAW_UNKNOWN_MESSAGE = envelope()
 
 async def test_parse_source_own_message(signal_api: SignalAPI):
     message = await parse(signal_api, RAW_SYNC_MESSAGE)
-    assert message.timestamp == TIMESTAMP
+    assert message.source == SOURCE
 
 
 async def test_parse_timestamp_own_message(signal_api: SignalAPI):
     message = await parse(signal_api, RAW_SYNC_MESSAGE)
-    assert message.source_number == SOURCE
+    assert message.timestamp == TIMESTAMP
 
 
 async def test_parse_type_own_message(signal_api: SignalAPI):
@@ -262,6 +338,14 @@ async def test_parse_group_own_message(signal_api: SignalAPI):
     assert isinstance(message, DataMessage)
     assert message.group_info is not None
     assert message.group_info.group_id == GROUP_ID
+
+
+async def test_parse_private_conversation_own_message(signal_api: SignalAPI):
+    message = await parse(signal_api, RAW_SYNC_MESSAGE_PRIVATE_CONVERSATION)
+    assert isinstance(message, DataMessage)
+    assert message.text == TEXT
+    assert message.source == DESTINATION
+    assert message.source_number == DESTINATION
 
 
 # Foreign Messages
@@ -303,6 +387,18 @@ async def test_read_reaction(signal_api: SignalAPI):
     assert message.is_remove is False
 
 
+async def test_read_reaction_private_conversation(signal_api: SignalAPI):
+    message = await parse(
+        signal_api, RAW_REACTION_SYNC_MESSAGE_MESSAGE_PRIVATE_CONVERSATION
+    )
+    assert isinstance(message, Reaction)
+    assert message.emoji == "👍"
+    assert message.timestamp == TIMESTAMP
+    assert message.is_remove is False
+    assert message.source == DESTINATION
+    assert message.source_number == DESTINATION
+
+
 async def test_remote_delete_data_message(signal_api: SignalAPI):
     message = await parse(signal_api, RAW_REMOTE_DELETE_DATA_MESSAGE)
     assert isinstance(message, RemoteDelete)
@@ -319,11 +415,32 @@ async def test_remote_delete_sync_message(signal_api: SignalAPI):
     assert message.group_info.group_id == GROUP_ID
 
 
+async def test_remote_delete_sync_message_private_conversation(signal_api: SignalAPI):
+    message = await parse(
+        signal_api, RAW_REMOTE_DELETE_SYNC_MESSAGE_PRIVATE_CONVERSATION
+    )
+    assert isinstance(message, RemoteDelete)
+    assert message.timestamp == REMOTE_DELETE_TIMESTAMP
+    assert message.source == DESTINATION
+    assert message.source_number == DESTINATION
+
+
 async def test_edit_message(signal_api: SignalAPI):
     message = await parse(signal_api, RAW_EDIT_MESSAGE)
     assert isinstance(message, EditMessage)
     assert message.target_sent_timestamp == TIMESTAMP
     assert message.text == "Uhrzeit!"
+
+
+async def test_edit_message_private_conversation(signal_api: SignalAPI):
+    message = await parse(
+        signal_api, RAW_EDIT_MESSAGE_SYNC_MESSAGE_PRIVATE_CONVERSATION
+    )
+    assert isinstance(message, EditMessage)
+    assert message.target_sent_timestamp == TIMESTAMP
+    assert message.text == "Uhrzeit!"
+    assert message.source == DESTINATION
+    assert message.source_number == DESTINATION
 
 
 async def test_typing_message(signal_api: SignalAPI):

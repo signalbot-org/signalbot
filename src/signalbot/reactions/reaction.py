@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from signalbot._utils.generated_conversion import from_generated
+from signalbot._utils.source import parse_source_from_envelope
 from signalbot.events import BaseMessageWithGroup, GroupInfo
 
 if TYPE_CHECKING:
@@ -31,14 +32,15 @@ class Reaction(BaseMessageWithGroup):
         reaction_message: generated.Reaction,
     ) -> Reaction:
         group_info = from_generated(GroupInfo, data_message.group_info)
+        source = parse_source_from_envelope(message_envelope)
         return cls(
             server_delivered_timestamp=message_envelope.server_delivered_timestamp,
             server_received_timestamp=message_envelope.server_received_timestamp,
-            source=message_envelope.source,
+            source=source.source,
             source_device=message_envelope.source_device,
             source_name=message_envelope.source_name,
-            source_number=message_envelope.source_number,
-            source_uuid=message_envelope.source_uuid,
+            source_number=source.number,
+            source_uuid=source.uuid,
             timestamp=reaction_message.target_sent_timestamp,
             group_info=group_info,
             emoji=reaction_message.emoji,
