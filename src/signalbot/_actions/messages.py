@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     import logging
 
     from signalbot._client import SignalAPI
+    from signalbot._generated import SendMessageResponse
     from signalbot._recipients import RecipientResolver
     from signalbot.messages import SendMessage
 
@@ -42,9 +43,10 @@ class MessageActions(BotActionsBase):
         recipient = self._recipients.resolve(recipient)
 
         send_message_v2 = await message.to_generated(self._phone_number, [recipient])
-        send_message_response = await self._signal.messages.send(send_message_v2)
+        [send_message_response] = await self._signal.messages.send(send_message_v2)
         timestamp = int(send_message_response.timestamp)
         self._logger.info("[Bot] New message %s sent:\n%s", timestamp, message.text)
+        self._log_send_errors(send_message_response)
 
         return SentMessage.from_send_message(message, recipient, timestamp)
 
@@ -79,12 +81,28 @@ class MessageActions(BotActionsBase):
             return []
 
         send_message_v2 = await message.to_generated(self._phone_number, recipients)
-        send_message_response = await self._signal.messages.send(send_message_v2)
-        timestamp = int(send_message_response.timestamp)
+        send_message_responses = await self._signal.messages.send(send_message_v2)
+        timestamps = [int(response.timestamp) for response in send_message_responses]
 
-        self._logger.info("[Bot] New message %s sent:\n%s", timestamp, message.text)
+        self._logger.info("[Bot] New message %s sent:\n%s", timestamps, message.text)
+        for send_message_response in send_message_responses:
+            self._log_send_errors(send_message_response)
 
-        return SentMessage.from_send_message_multiple(message, recipients, timestamp)
+        return SentMessage.from_send_message_multiple(message, recipients, timestamps)
+
+    def _log_send_errors(self, send_message_response: SendMessageResponse) -> None:
+        """Warn about recipients the message could not be delivered to."""
+        errors = send_message_response.errors
+        if errors is None or errors.recipients is None:
+            return
+
+        for error in errors.recipients:
+            self._logger.warning(
+                "[Bot] Message %s not delivered to %s: %s",
+                send_message_response.timestamp,
+                error.number or error.uuid or error.username,
+                error.reason,
+            )
 
     @staticmethod
     def _is_valid_send_multiple_recipients(recipients: list[str]) -> bool:

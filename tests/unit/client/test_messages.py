@@ -19,7 +19,7 @@ async def test_send(
     signal_api: SignalAPI, mock_json_response: Callable[[str, dict | list], MockType]
 ):
     expected_timestamp = "1638715559464"
-    mock_json_response("post", {"timestamp": expected_timestamp})
+    mock_json_response("post", [{"timestamp": expected_timestamp}])
 
     data_message = SendMessageV2(
         message="Hello World!",
@@ -28,7 +28,38 @@ async def test_send(
     )
     resp = await signal_api.messages.send(data_message)
 
-    assert resp.timestamp == expected_timestamp
+    assert len(resp) == 1
+    assert resp[0].timestamp == expected_timestamp
+
+
+async def test_send_parses_recipient_errors(
+    signal_api: SignalAPI, mock_json_response: Callable[[str, dict | list], MockType]
+):
+    mock_json_response(
+        "post",
+        [
+            {
+                "timestamp": "1638715559464",
+                "errors": {
+                    "recipients": [
+                        {"number": PHONE_NUMBER, "reason": "Unregistered user"}
+                    ]
+                },
+            }
+        ],
+    )
+
+    data_message = SendMessageV2(
+        message="Hello World!",
+        number=PHONE_NUMBER,
+        recipients=[PHONE_NUMBER],
+    )
+    [resp] = await signal_api.messages.send(data_message)
+
+    assert resp.errors is not None
+    assert resp.errors.recipients is not None
+    assert resp.errors.recipients[0].number == PHONE_NUMBER
+    assert resp.errors.recipients[0].reason == "Unregistered user"
 
 
 async def test_poll(

@@ -129,9 +129,9 @@ class SentMessage(BaseSendMessage):
 
     @classmethod
     def from_send_message_multiple(
-        cls, send_message: SendMessage, recipients: list[str], timestamp: int
+        cls, send_message: SendMessage, recipients: list[str], timestamps: list[int]
     ) -> list[SentMessage]:
         return [
             cls.from_send_message(send_message, recipient, timestamp)
-            for recipient in recipients
+            for recipient, timestamp in zip(recipients, timestamps, strict=True)
         ]

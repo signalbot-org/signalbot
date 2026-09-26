@@ -9,6 +9,9 @@ from .group_permissions import GroupPermissions
 from .link_preview_type import LinkPreviewType
 from .message import Message
 from .message_mention import MessageMention
+from .send_message_error import SendMessageError
+from .send_message_errors import SendMessageErrors
+from .send_message_response import SendMessageResponse
 from .send_messages import SendMessages
 
 __all__ = [
@@ -18,5 +21,8 @@ __all__ = [
     "LinkPreviewType",
     "Message",
     "MessageMention",
+    "SendMessageError",
+    "SendMessageErrors",
+    "SendMessageResponse",
     "SendMessages",
 ]

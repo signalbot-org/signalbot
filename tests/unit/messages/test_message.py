@@ -216,6 +216,7 @@ RAW_ATTACHMENT_MESSAGE = envelope(
                 "contentType": "image/png",
                 "filename": "image.png",
                 "id": LOCAL_FILENAME,
+                "isVoiceNote": False,
                 "size": 12005,
             }
         ],

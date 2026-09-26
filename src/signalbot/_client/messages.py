@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import websockets
+from pydantic import TypeAdapter
 
 from signalbot._client.base import BaseClient, SectionURIs
 from signalbot._generated import RemoteDeleteResponse, SendMessageResponse
@@ -18,6 +19,9 @@ if TYPE_CHECKING:
         SendMessageV2,
         TypingIndicatorRequest,
     )
+
+
+_SEND_MESSAGE_RESPONSES = TypeAdapter(list[SendMessageResponse])
 
 
 class MessagesURIs(SectionURIs):
@@ -51,11 +55,11 @@ class MessagesClient(BaseClient[MessagesURIs]):
     async def send(
         self,
         data_message: SendMessageV2,
-    ) -> SendMessageResponse:
+    ) -> list[SendMessageResponse]:
         uri = self._uris.send_uri()
         payload = data_message.model_dump_json(exclude_none=True, by_alias=True)
         resp = await self._request("post", uri, error_cls=SendError, payload=payload)
-        return SendMessageResponse.model_validate(await resp.json())
+        return _SEND_MESSAGE_RESPONSES.validate_python(await resp.json())
 
     async def start_typing(
         self, typing_request: TypingIndicatorRequest

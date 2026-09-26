@@ -15,7 +15,7 @@ async def _send_and_capture_auth_header(
 ) -> str | None:
     signal_api = SignalAPI(SIGNAL_SERVICE, PHONE_NUMBER, auth=auth)
 
-    json_mock = mocker.AsyncMock(return_value={"timestamp": "1638715559464"})
+    json_mock = mocker.AsyncMock(return_value=[{"timestamp": "1638715559464"}])
     mock_session = mocker.AsyncMock()
     mock_session.post.return_value = mocker.AsyncMock(
         spec=aiohttp.ClientResponse,
@@ -31,7 +31,7 @@ async def _send_and_capture_auth_header(
     )
     resp = await signal_api.messages.send(data_message)
 
-    assert resp.timestamp == "1638715559464"
+    assert resp[0].timestamp == "1638715559464"
 
     _, kwargs = mock_session.post.call_args
     return kwargs["headers"].get("Authorization")

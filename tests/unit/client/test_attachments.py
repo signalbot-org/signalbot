@@ -19,7 +19,7 @@ async def test_download_attachment(signal_api: SignalAPI, mocker: MockerFixture)
         content=mocker.Mock(read=content_mock),
     )
 
-    attachment = Attachment(local_filename="my-file.png")
+    attachment = Attachment(local_filename="my-file.png", isVoiceNote=False)
     result = await signal_api.attachments.download(attachment)
 
     assert result == base64.b64encode(b"file content").decode("utf-8")
@@ -30,14 +30,14 @@ async def test_delete_attachment(
 ):
     mock = mock_json_response("delete", {})
 
-    attachment = Attachment(local_filename="my-file.png")
+    attachment = Attachment(local_filename="my-file.png", isVoiceNote=False)
     await signal_api.attachments.delete(attachment)
 
     assert mock.call_count == 1
 
 
 async def test_delete_attachment_without_local_filename_raises(signal_api: SignalAPI):
-    attachment = Attachment(local_filename=None)
+    attachment = Attachment(local_filename=None, isVoiceNote=False)
 
     with pytest.raises(ValueError, match="no local filename"):
         await signal_api.attachments.delete(attachment)

@@ -190,7 +190,7 @@ class _FirstArgResultsMock(AsyncMock):
 class SendMock(_FirstArgResultsMock):
     def __init__(self, **kwargs: str) -> None:
         super().__init__(**kwargs)
-        self.return_value = SendMessageResponse(timestamp="1638715559464")
+        self.return_value = [SendMessageResponse(timestamp="1638715559464")]
 
 
 class ReactMock(_FirstArgResultsMock):
@@ -229,7 +229,7 @@ class AboutMock(AsyncMock):
             build=1,
             capabilities={},
             mode="json-rpc",
-            version="0.100.0",
+            version="0.101.0",
             versions=["v1"],
         )
 

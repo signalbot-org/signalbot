@@ -20,6 +20,7 @@ def test_quote_with_attachment():
                         "contentType": "image/png",
                         "filename": None,
                         "id": "1qeCjjWOOo9Gxv8pfdCw.png",
+                        "isVoiceNote": False,
                         "size": 21035,
                         "width": 150,
                         "height": 150,
