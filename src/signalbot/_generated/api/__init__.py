@@ -28,7 +28,6 @@ from .remote_delete_response import RemoteDeleteResponse
 from .remove_reaction_request import RemoveReactionRequest
 from .search_response import SearchResponse
 from .send_message_error import SendMessageError
-from .send_message_response import SendMessageResponse
 from .send_message_v1 import SendMessageV1
 from .send_message_v2 import SendMessageV2
 from .send_reaction_request import SendReactionRequest
@@ -74,7 +73,6 @@ __all__ = [
     "RemoveReactionRequest",
     "SearchResponse",
     "SendMessageError",
-    "SendMessageResponse",
     "SendMessageV1",
     "SendMessageV2",
     "SendReactionRequest",

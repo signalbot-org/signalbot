@@ -20,6 +20,7 @@ class Attachment(BaseModel):
         serialization_alias="id",
         validation_alias=AliasChoices("id", "local_filename"),
     )
+    is_voice_note: bool = Field(..., alias="isVoiceNote")
     size: int | None = None
     upload_timestamp: int | None = Field(default=None, alias="uploadTimestamp")
     width: int | None = None

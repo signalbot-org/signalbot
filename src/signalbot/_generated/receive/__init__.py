@@ -19,6 +19,7 @@ from .contact_phone import ContactPhone
 from .data_message import DataMessage
 from .edit_message import EditMessage
 from .error import Error
+from .group_call_update import GroupCallUpdate
 from .group_info import GroupInfo
 from .hangup_message import HangupMessage
 from .ice_update_message import IceUpdateMessage
@@ -71,6 +72,7 @@ __all__ = [
     "DataMessage",
     "EditMessage",
     "Error",
+    "GroupCallUpdate",
     "GroupInfo",
     "HangupMessage",
     "IceUpdateMessage",

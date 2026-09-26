@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from .admin_delete import AdminDelete
 from .attachment import Attachment
 from .edit_message import EditMessage
+from .group_call_update import GroupCallUpdate
 from .group_info import GroupInfo
 from .mention import Mention
 from .payment import Payment
@@ -35,8 +36,14 @@ class SyncDataMessage(BaseModel):
     destination_uuid: str | None = Field(default=None, alias="destinationUuid")
     edit_message: EditMessage | None = Field(default=None, alias="editMessage")
     expires_in_seconds: int | None = Field(default=None, alias="expiresInSeconds")
+    group_call_update: GroupCallUpdate | None = Field(
+        default=None, alias="groupCallUpdate"
+    )
     group_info: GroupInfo | None = Field(default=None, alias="groupInfo")
+    has_profile_key: bool | None = Field(default=None, alias="hasProfileKey")
+    is_end_session: bool | None = Field(default=None, alias="isEndSession")
     is_expiration_update: bool | None = Field(default=None, alias="isExpirationUpdate")
+    is_profile_key_update: bool | None = Field(default=None, alias="isProfileKeyUpdate")
     mentions: list[Mention] | None = None
     message: str | None = None
     payment: Payment | None = None

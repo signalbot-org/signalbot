@@ -27,8 +27,9 @@ from .api.remote_delete_request import RemoteDeleteRequest
 from .api.remote_delete_response import RemoteDeleteResponse
 from .api.remove_reaction_request import RemoveReactionRequest
 from .api.search_response import SearchResponse
-from .api.send_message_error import SendMessageError
-from .api.send_message_response import SendMessageResponse
+from .api.send_message_error import (
+    SendMessageError as ApiSendMessageErrorSendMessageError,
+)
 from .api.send_message_v1 import SendMessageV1
 from .api.send_message_v2 import SendMessageV2
 from .api.send_reaction_request import SendReactionRequest
@@ -64,6 +65,11 @@ from .data.group_permissions import GroupPermissions
 from .data.link_preview_type import LinkPreviewType
 from .data.message import Message
 from .data.message_mention import MessageMention
+from .data.send_message_error import (
+    SendMessageError as SendMessageErrorSendMessageError,
+)
+from .data.send_message_errors import SendMessageErrors
+from .data.send_message_response import SendMessageResponse
 from .data.send_messages import SendMessages
 from .model import Model
 from .receive.admin_delete import AdminDelete
@@ -82,6 +88,7 @@ from .receive.contact_phone import ContactPhone
 from .receive.data_message import DataMessage
 from .receive.edit_message import EditMessage
 from .receive.error import Error as ErrorError
+from .receive.group_call_update import GroupCallUpdate
 from .receive.group_info import GroupInfo
 from .receive.hangup_message import HangupMessage
 from .receive.ice_update_message import IceUpdateMessage
@@ -125,6 +132,7 @@ __all__ = [
     "AdminDelete",
     "AnswerMessage",
     "ApiErrorError",
+    "ApiSendMessageErrorSendMessageError",
     "Attachment",
     "AttachmentData",
     "BackgroundGradient",
@@ -151,6 +159,7 @@ __all__ = [
     "EditGroup",
     "EditMessage",
     "ErrorError",
+    "GroupCallUpdate",
     "GroupEntry",
     "GroupInfo",
     "GroupLink",
@@ -193,7 +202,8 @@ __all__ = [
     "RemoteDeleteResponse",
     "RemoveReactionRequest",
     "SearchResponse",
-    "SendMessageError",
+    "SendMessageErrorSendMessageError",
+    "SendMessageErrors",
     "SendMessageResponse",
     "SendMessageResult",
     "SendMessageV1",
