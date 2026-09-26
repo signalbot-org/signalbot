@@ -55,7 +55,14 @@ class MessagesClient(BaseClient[MessagesURIs]):
         uri = self._uris.send_uri()
         payload = data_message.model_dump_json(exclude_none=True, by_alias=True)
         resp = await self._request("post", uri, error_cls=SendError, payload=payload)
-        return SendMessageResponse.model_validate(await resp.json())
+        response = await resp.json()
+        if isinstance(response, list):
+            # Newer API versions wrap the shared send timestamp in an array.
+            if len(response) != 1:
+                msg = f"Expected exactly one send timestamp, got {len(response)}"
+                raise SendError(msg)
+            response = response[0]
+        return SendMessageResponse.model_validate(response)
 
     async def start_typing(
         self, typing_request: TypingIndicatorRequest

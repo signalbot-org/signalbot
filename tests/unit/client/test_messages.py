@@ -15,20 +15,51 @@ from tests.conftest import GROUP_ID, PHONE_NUMBER
 from tests.unit.client.conftest import HTTP_OK
 
 
+@pytest.mark.parametrize("as_array", [False, True], ids=["object", "array"])
+@pytest.mark.parametrize("recipients", [[GROUP_ID], [PHONE_NUMBER, "+49123456789"]])
 async def test_send(
-    signal_api: SignalAPI, mock_json_response: Callable[[str, dict | list], MockType]
+    signal_api: SignalAPI,
+    mock_json_response: Callable[[str, dict | list], MockType],
+    *,
+    as_array: bool,
+    recipients: list[str],
 ):
     expected_timestamp = "1638715559464"
-    mock_json_response("post", {"timestamp": expected_timestamp})
+    response = {"timestamp": expected_timestamp}
+    mock = mock_json_response("post", [response] if as_array else response)
 
+    data_message = SendMessageV2(
+        message="Hello World!",
+        number=PHONE_NUMBER,
+        recipients=recipients,
+    )
+    resp = await signal_api.messages.send(data_message)
+
+    assert resp.timestamp == expected_timestamp
+    assert mock.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "response",
+    [[], [{"timestamp": "1638715559464"}, {"timestamp": "1638715559465"}]],
+    ids=["empty", "multiple"],
+)
+async def test_send_rejects_unexpected_response_count(
+    signal_api: SignalAPI,
+    mock_json_response: Callable[[str, dict | list], MockType],
+    response: list[dict[str, str]],
+):
+    mock = mock_json_response("post", response)
     data_message = SendMessageV2(
         message="Hello World!",
         number=PHONE_NUMBER,
         recipients=[GROUP_ID],
     )
-    resp = await signal_api.messages.send(data_message)
 
-    assert resp.timestamp == expected_timestamp
+    with pytest.raises(SendError, match="Expected exactly one send timestamp"):
+        await signal_api.messages.send(data_message)
+
+    assert mock.call_count == 1
 
 
 async def test_poll(
