@@ -1495,8 +1495,18 @@ on the <code>context</code> passed into a <code>Handler</code>:</p>
 <ul>
 <li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;register&lt;/span&gt;" href="reference/bot/#signalbot.bot.SignalBot.register">bot.register(handler)</a>: Register a new handler</li>
 <li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-function-name&quot;&gt;start&lt;/span&gt;" href="reference/bot/#signalbot.bot.SignalBot.start">bot.start()</a>: Start the bot</li>
-<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SignalBot&lt;/span&gt;" href="reference/bot/#signalbot.bot.SignalBot">bot.scheduler</a>: Schedule tasks, see the <a href="examples/03_bot_with_scheduler/">scheduler examples</a>.</li>
-<li><code>bot.storage</code> (<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SQLiteStorage&lt;/span&gt;" href="reference/storage/#signalbot.storage.SQLiteStorage"><code>SQLiteStorage</code></a> or
+<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;scheduler&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-instance-attribute&quot;&gt;&lt;code&gt;instance-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="reference/bot/#signalbot.bot.SignalBot.scheduler">bot.scheduler</a>: Schedule tasks, see the <a href="examples/03_bot_with_scheduler/">scheduler examples</a>.</li>
+<li><a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-attribute-name&quot;&gt;storage&lt;/span&gt;
+
+
+  &lt;span class=&quot;doc doc-labels&quot;&gt;
+      &lt;small class=&quot;doc doc-label doc-label-instance-attribute&quot;&gt;&lt;code&gt;instance-attribute&lt;/code&gt;&lt;/small&gt;
+  &lt;/span&gt;" href="reference/bot/#signalbot.bot.SignalBot.storage">bot.storage</a> (<a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;SQLiteStorage&lt;/span&gt;" href="reference/storage/#signalbot.storage.SQLiteStorage"><code>SQLiteStorage</code></a> or
   <a class="autorefs autorefs-internal" title="&lt;span class=&quot;doc doc-object-name doc-class-name&quot;&gt;RedisStorage&lt;/span&gt;" href="reference/storage/#signalbot.storage.RedisStorage"><code>RedisStorage</code></a>): Store and read data on disk with a db.</li>
 </ul>
 <p>Every method above can also be called directly on the bot, outside a handler, by supplying
