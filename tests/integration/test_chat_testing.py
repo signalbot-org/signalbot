@@ -18,11 +18,13 @@ from signalbot.messages import (
     ReceivedMessage,
     RemoteDelete,
     SendMessage,
+    SentMessage,
     parse,
 )
-from signalbot.test_utils import ChatTestCase, Envelope, mock_chat
+from signalbot.test_utils import ChatTestCase, Envelope, SendMock, mock_chat
 
 SENDER_UUID = "11111111-1111-1111-1111-111111111111"
+OTHER_UUID = "22222222-2222-2222-2222-222222222222"
 
 
 class SlowEchoCommand(DataMessageHandler):
@@ -185,3 +187,48 @@ class TestPrivateChat(ChatTestCase):
         assert edit.target_sent_timestamp == 100
         assert self.private.received[2].timestamp == 100
         assert self.group.received == []
+
+
+class BroadcastCommand(DataMessageHandler):
+    """Sends to the sender, then to two contacts at once, then edits the first."""
+
+    def __init__(self) -> None:
+        self.sent: list[SentMessage] = []
+
+    async def handle_data_message(self, context: DataMessageContext):
+        first = await context.send(SendMessage(text="first"))
+        multiple = await context.bot.messages.send_multiple(
+            SendMessage(text="multiple"), [OTHER_UUID, SENDER_UUID]
+        )
+        edited = await context.edit(SendMessage(text="edited"), first)
+        self.sent = [first, *multiple, edited]
+
+
+class TestSendMock(ChatTestCase):
+    @pytest.fixture(autouse=True)
+    def setup_fixture(self):
+        self.setup()
+        self.handler = BroadcastCommand()
+        self.signal_bot.register(self.handler)
+
+    @mock_chat(ChatTestCase.new_private_message("go", source_uuid=SENDER_UUID))
+    async def test_unique_timestamps(self, mocker: MockerFixture):
+        timestamps = [sent.timestamp for sent in self.handler.sent]
+        first = SendMock.FIRST_TIMESTAMP
+        assert timestamps == [first, first + 1, first + 2, first + 3]
+        assert [sent.recipient for sent in self.handler.sent] == [
+            SENDER_UUID,
+            OTHER_UUID,
+            SENDER_UUID,
+            SENDER_UUID,
+        ]
+
+        results = self.send_mock.results()
+        assert [sent.message for sent in results] == ["first", "multiple", "edited"]
+        assert results[1].recipients == [OTHER_UUID, SENDER_UUID]
+        assert results[2].edit_timestamp == first
+
+    async def test_explicit_return_value_wins(self):
+        send_mock = SendMock()
+        send_mock.return_value = ["custom"]
+        assert await send_mock(object()) == ["custom"]

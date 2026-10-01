@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import functools
+import itertools
 import json
 import time
 import uuid
 from collections.abc import Awaitable, Callable, Sequence
 from types import MappingProxyType
-from typing import TYPE_CHECKING
-from unittest.mock import AsyncMock, MagicMock
+from typing import TYPE_CHECKING, Any
+from unittest.mock import DEFAULT, AsyncMock, MagicMock
 
 from signalbot._generated import (
     AddMembers,
@@ -24,6 +25,7 @@ from signalbot.handlers import DataMessageHandler
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
+    from signalbot._generated import SendMessageV2, SendReactionRequest
     from signalbot.context import DataMessageContext
 
 AsyncTestMethod = Callable[..., Awaitable[None]]
@@ -374,18 +376,46 @@ class ReceiveMock(MagicMock):
 
 
 class _FirstArgResultsMock(AsyncMock):
-    def results(self) -> list:
+    def _first_args(self) -> list[Any]:
         return [call.args[0] for call in self.call_args_list]
 
 
 class SendMock(_FirstArgResultsMock):
-    def __init__(self, **kwargs: str) -> None:
+    """Stub for sending messages.
+
+    Each call returns one response per recipient, each with a fresh, strictly
+    increasing timestamp (`FIRST_TIMESTAMP`, then +1 per response), so the
+    [SentMessage][signalbot.messages.SentMessage]s a handler gets back can be
+    told apart, e.g. to match later edits, remote deletes or quotes. Setting
+    `return_value` explicitly overrides this.
+    """
+
+    FIRST_TIMESTAMP = 1638715559464
+
+    def __init__(self, **kwargs: object) -> None:
         super().__init__(**kwargs)
-        self.return_value = [SendMessageResponse(timestamp="1638715559464")]
+        self._timestamps = itertools.count(self.FIRST_TIMESTAMP)
+        self.side_effect = self._respond
+
+    def _respond(self, data_message: SendMessageV2) -> object:
+        if self._mock_return_value is not DEFAULT:
+            return DEFAULT
+        return [
+            SendMessageResponse(timestamp=str(next(self._timestamps)))
+            for _ in data_message.recipients or [None]
+        ]
+
+    def results(self) -> list[SendMessageV2]:
+        """The message request passed to each send, in call order."""
+        return self._first_args()
 
 
 class ReactMock(_FirstArgResultsMock):
-    pass
+    """Stub for sending reactions."""
+
+    def results(self) -> list[SendReactionRequest]:
+        """The reaction request passed to each call, in call order."""
+        return self._first_args()
 
 
 class GetAllMock(AsyncMock):
