@@ -156,13 +156,22 @@ class SignalBot:
         """
         self._pipeline.register(handler, contacts=contacts, groups=groups, f=f)
 
-    async def _async_post_init(self) -> None:
+    async def _async_init(self) -> None:
+        """Connect to signal-cli-rest-api and get handlers ready, without starting
+        the background producer/consumer pipeline.
+
+        Split out from `_async_post_init` so `signalbot.test_utils` can initialise
+        the bot and then drive the pipeline by hand.
+        """
         await self._check_signal_service()
         await self._check_signal_cli_rest_api_version()
         await self._check_signal_cli_rest_api_mode()
         await self.groups.refresh()
         await self._pipeline.resolve_handlers()
         await self._pipeline.run_ready_handlers()
+
+    async def _async_post_init(self) -> None:
+        await self._async_init()
         await self._pipeline.start()
 
     async def _check_signal_service(self) -> None:
