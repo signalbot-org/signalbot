@@ -84,8 +84,8 @@ It names every file that needs to change, in order.
 
 ### Runtime model
 
-`SignalBot.start()` schedules `_async_post_init` (checks `signal-cli-rest-api` connectivity/version/mode,
-refreshes the group cache, runs `ReadyHandler`s, then starts the pipeline) and runs the asyncio event loop.
+`SignalBot.start()` schedules `_async_post_init` (`_async_init` checks `signal-cli-rest-api` connectivity/version/mode,
+refreshes the group cache, runs `ReadyHandler`s; then it starts the pipeline) and runs the asyncio event loop.
 The pipeline runs 1 producer task (reads the websocket, parses, dispatches to a queue) and N consumer tasks
 (default 3; pull from the queue, invoke the handler) — tune consumer count based on how blocking handler code
 is. Both producer and consumer loops are wrapped in `rerun_on_exception` (`_utils/retry.py`) so an uncaught

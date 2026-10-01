@@ -64,7 +64,7 @@ def mock_chat(*messages: str) -> Callable[[AsyncTestMethod], AsyncTestMethod]:
             )
 
             receive_mock.define(messages)
-            await self.signal_bot._async_post_init()
+            await self.signal_bot._async_init()
             await self.run_bot()
 
             return await func(self, mocker, *args, **kwargs)
