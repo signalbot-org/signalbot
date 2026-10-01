@@ -61,6 +61,19 @@ bot.register(HelpHandler(), exclusive=True, priority=1)  # @text_triggered("!hel
 bot.register(EchoHandler(), exclusive=True)  # no trigger, priority 0: everything else
 ```
 
+Exclusivity only limits the exclusive handlers among themselves. Handlers that aren't exclusive
+also run when an exclusive one matches the same message. Add a handler that logs every message:
+
+```python
+bot.register(LogHandler())  # not exclusive, no trigger
+bot.register(PingHandler(), exclusive=True, priority=1)  # @text_triggered("!ping")
+bot.register(EchoHandler(), exclusive=True)  # no trigger, priority 0
+```
+
+Then `!ping` runs `LogHandler` and `PingHandler`, and any other message runs `LogHandler` and
+`EchoHandler`. The selected handlers are queued in registration order, but the consumers run them
+concurrently, so don't rely on one finishing before another starts.
+
 Exclusivity is decided per message before any handler runs, so it only takes into account the
 contact and group filters, the `f` filter and the trigger decorators. A handler that matches but
 then decides inside `handle_xxx` not to do anything still counts as having handled the message.

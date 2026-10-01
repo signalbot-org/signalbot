@@ -156,7 +156,8 @@ class SignalBot:
         message, only the one with the highest `priority` runs, the first registered
         one if several share it. Use them for commands that shouldn't also trigger a
         catch-all handler, and register the catch-all as exclusive with the lowest
-        priority so it only runs when no other exclusive handler matched.
+        priority so it only runs when no other exclusive handler matched. Handlers
+        that aren't exclusive still run alongside the selected exclusive handler.
 
         Args:
             handler: Handler instance to register.
