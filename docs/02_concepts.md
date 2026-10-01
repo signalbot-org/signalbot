@@ -41,8 +41,29 @@ flowchart LR
 Before any of this runs, handlers need to be registered with the bot — typically once at startup,
 e.g. `bot.register(PingHandler())`. The `bot.register()` just stores the handler and its filters;
 nothing is invoked yet. From then on, every incoming message is checked against each registered
-handler's filters and invoked with a fresh `Context`.
+handler's filters and trigger decorator (`@text_triggered`, `@regex_triggered`,
+`@reaction_triggered`), and every handler that matches is invoked with a fresh `Context`.
 Registration is the opening step of the walk-through below (steps 1-2).
+
+### Exclusive handlers
+
+By default every matching handler runs, so a handler without a trigger sees every message, also
+the ones another handler already answered. When a message should be handled by one handler only,
+register the handlers as exclusive: of the exclusive handlers that match a message, only the one
+with the highest `priority` runs, the first registered one if several share it. Handlers that
+aren't exclusive keep running as usual next to it.
+
+This makes a catch-all handler that only runs when no command matched:
+
+```python
+bot.register(PingHandler(), exclusive=True, priority=1)  # @text_triggered("!ping")
+bot.register(HelpHandler(), exclusive=True, priority=1)  # @text_triggered("!help")
+bot.register(EchoHandler(), exclusive=True)  # no trigger, priority 0: everything else
+```
+
+Exclusivity is decided per message before any handler runs, so it only takes into account the
+contact and group filters, the `f` filter and the trigger decorators. A handler that matches but
+then decides inside `handle_xxx` not to do anything still counts as having handled the message.
 
 ## Following one message end to end
 
@@ -71,9 +92,8 @@ sequenceDiagram
 
     API-->>Pipeline: websocket push: raw "!ping" envelope
     Pipeline->>Pipeline: parse() → DataMessage
-    Pipeline->>Pipeline: filters match? dispatch lookup
+    Pipeline->>Pipeline: filters and @text_triggered("!ping") match? dispatch lookup
     Pipeline->>Handler: handle_data_message(DataMessageContext(bot, message))
-    Note over Handler: @text_triggered("!ping") matches
     Handler->>Context: context.send(SendMessage(text="pong"))
     Context->>Bot: bot.messages.send(message, recipient)
     Bot-->>API: HTTP POST /v2/send

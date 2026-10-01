@@ -290,3 +290,30 @@ class TestSchnickSchnackSchnuckCommand(ChatTestCase):
         for sent in replies.results():
             assert sent.recipients == [ChatTestCase.group_id]
             assert sent.message == "schnuck"
+
+
+class PingCommand(DataMessageHandler):
+    @text_triggered("ping")
+    async def handle_data_message(self, context: DataMessageContext):
+        await context.send(SendMessage(text="pong"))
+
+
+class EchoFallback(DataMessageHandler):
+    async def handle_data_message(self, context: DataMessageContext):
+        await context.send(SendMessage(text=f"echo: {context.message.text}"))
+
+
+class TestExclusiveCommandsWithFallback(TestCommon):
+    @pytest.fixture(autouse=True)
+    def setup_fixture(self):
+        self.setup()
+        self.signal_bot.register(PingCommand(), exclusive=True, priority=1)
+        self.signal_bot.register(EchoFallback(), exclusive=True)
+
+    @mock_chat("ping")
+    async def test_command_does_not_trigger_the_fallback(self, mocker: MockerFixture):
+        assert [sent.message for sent in self.send_mock.results()] == ["pong"]
+
+    @mock_chat("hello")
+    async def test_fallback_handles_everything_else(self, mocker: MockerFixture):
+        assert [sent.message for sent in self.send_mock.results()] == ["echo: hello"]

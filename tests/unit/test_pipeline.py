@@ -6,7 +6,14 @@ from typing import TYPE_CHECKING, cast
 
 import pytest
 
-from signalbot import DataMessageHandler, ReadyHandler
+from signalbot import (
+    DataMessageHandler,
+    ReactionHandler,
+    ReadyHandler,
+    reaction_triggered,
+    regex_triggered,
+    text_triggered,
+)
 from signalbot.errors import SignalBotError
 from signalbot.test_utils import ChatTestCase, DummyHandler
 from tests.conftest import GROUP_ID
@@ -21,7 +28,7 @@ from tests.unit.conftest import (
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from signalbot.context import DataMessageContext, ReadyContext
+    from signalbot.context import DataMessageContext, ReactionContext, ReadyContext
     from signalbot.messages import DataMessage, ReceivedMessage
 
 
@@ -338,3 +345,140 @@ class TestConsumeResilience(TestCommon):
 
         with pytest.raises(RuntimeError, match="boom"):
             await pipeline._consume_new_item(1)
+
+
+class _Recorder(DataMessageHandler):
+    """Catch-all handler, only used to check which handlers get queued."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+
+    async def handle_data_message(self, context: DataMessageContext) -> None:
+        pass
+
+
+class _Ping(_Recorder):
+    @text_triggered("ping")
+    async def handle_data_message(self, context: DataMessageContext) -> None:
+        pass
+
+
+class _Digits(_Recorder):
+    @regex_triggered(r"\d")
+    async def handle_data_message(self, context: DataMessageContext) -> None:
+        pass
+
+
+class _PingWithDigits(_Recorder):
+    @text_triggered("ping 1")
+    @regex_triggered(r"\d")
+    async def handle_data_message(self, context: DataMessageContext) -> None:
+        pass
+
+
+class _ThumbsUp(ReactionHandler):
+    @reaction_triggered("👍")
+    async def handle_reaction(self, context: ReactionContext) -> None:
+        pass
+
+
+class TestDispatch(TestCommon):
+    async def queued_for(self, text: str) -> list[str]:
+        """Dispatches a private message with `text` and returns the names of the
+        queued handlers, in queue order."""
+        pipeline = self.signal_bot._pipeline
+        await pipeline.resolve_handlers()
+        await pipeline._dispatch_to_handlers(make_data_message(text=text))
+        names = []
+        while not pipeline._q.empty():
+            handler, *_ = pipeline._q.get_nowait()
+            names.append(cast("_Recorder", handler).name)
+        return names
+
+    async def test_handlers_whose_trigger_does_not_match_are_not_queued(self):
+        self.signal_bot.register(_Ping("ping"))
+        self.signal_bot.register(_Recorder("all"))
+
+        assert await self.queued_for("ping") == ["ping", "all"]
+        assert await self.queued_for("pong") == ["all"]
+
+    async def test_stacked_triggers_must_all_match(self):
+        self.signal_bot.register(_PingWithDigits("both"))
+
+        assert await self.queued_for("ping 1") == ["both"]
+        assert await self.queued_for("pong 1") == []
+
+    async def test_only_the_first_matching_exclusive_handler_runs(self):
+        self.signal_bot.register(_Ping("ping"), exclusive=True)
+        self.signal_bot.register(_Digits("digits"), exclusive=True)
+        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+
+        assert await self.queued_for("ping") == ["ping"]
+        assert await self.queued_for("call 112") == ["digits"]
+        assert await self.queued_for("hello") == ["fallback"]
+
+    async def test_the_highest_priority_wins_regardless_of_registration_order(self):
+        self.signal_bot.register(_Recorder("fallback"), exclusive=True, priority=-1)
+        self.signal_bot.register(_Digits("digits"), exclusive=True)
+        self.signal_bot.register(_Ping("ping"), exclusive=True, priority=10)
+
+        assert await self.queued_for("ping") == ["ping"]
+        assert await self.queued_for("call 112") == ["digits"]
+        assert await self.queued_for("hello") == ["fallback"]
+
+    async def test_non_exclusive_handlers_run_alongside_in_registration_order(self):
+        self.signal_bot.register(_Recorder("before"))
+        self.signal_bot.register(_Ping("ping"), exclusive=True, priority=1)
+        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+        self.signal_bot.register(_Recorder("after"))
+
+        assert await self.queued_for("ping") == ["before", "ping", "after"]
+        assert await self.queued_for("hello") == ["before", "fallback", "after"]
+
+    async def test_exclusive_handlers_of_other_message_types_do_not_compete(self):
+        self.signal_bot.register(_ThumbsUp(), exclusive=True, priority=100)
+        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+
+        assert await self.queued_for("hello") == ["fallback"]
+
+    async def test_contact_and_lambda_filters_apply_before_exclusivity(self):
+        self.signal_bot.register(
+            _Ping("other-contact"), contacts=["+1"], exclusive=True
+        )
+        self.signal_bot.register(
+            _Ping("filtered"), f=lambda _: False, exclusive=True, priority=5
+        )
+        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+
+        assert await self.queued_for("ping") == ["fallback"]
+
+    async def test_raising_filter_skips_only_that_handler(
+        self, caplog: pytest.LogCaptureFixture
+    ):
+        def explode(_message: ReceivedMessage) -> bool:
+            error_msg = "boom"
+            raise RuntimeError(error_msg)
+
+        self.signal_bot.register(_Recorder("broken"), f=explode, exclusive=True)
+        self.signal_bot.register(_Recorder("ok"))
+
+        with caplog.at_level(logging.ERROR):
+            assert await self.queued_for("hello") == ["ok"]
+        assert "Filter or trigger raised" in caplog.text
+
+    async def test_unknown_message_type_is_not_dispatched(
+        self, caplog: pytest.LogCaptureFixture
+    ):
+        self.signal_bot.register(_Recorder("all"))
+        pipeline = self.signal_bot._pipeline
+        await pipeline.resolve_handlers()
+
+        with caplog.at_level(logging.WARNING):
+            await pipeline._dispatch_to_handlers(cast("ReceivedMessage", object()))
+
+        assert pipeline._q.empty()
+        assert "Unknown message type" in caplog.text
+
+    def test_priority_requires_exclusive(self):
+        with pytest.raises(ValueError, match="exclusive=True"):
+            self.signal_bot.register(_Recorder("all"), priority=1)

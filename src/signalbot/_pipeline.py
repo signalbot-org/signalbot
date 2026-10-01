@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import itertools
 import time
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from signalbot._utils.retry import rerun_on_exception
@@ -25,6 +26,7 @@ from signalbot.handlers import (
     ReadyHandler,
     RemoteDeleteHandler,
     TypingHandler,
+    _message_trigger,
 )
 from signalbot.messages import (
     DataMessage,
@@ -57,6 +59,12 @@ _MESSAGE_DISPATCH: dict[type, tuple[type, type, str]] = {
 }
 
 
+@dataclass(frozen=True)
+class _DispatchOptions:
+    exclusive: bool = False
+    priority: int = 0
+
+
 class MessagePipeline:
     """Owns handler registration and the produce/consume queue that dispatches
     incoming messages to registered handlers.
@@ -76,6 +84,10 @@ class MessagePipeline:
 
         self._handlers_to_register: HandlerList = []  # populated by .register()
         self.handlers: HandlerList = []  # populated by .resolve_handlers()
+        # Same order as `_handlers_to_register` and `handlers`, kept apart so the public
+        # `HandlerList` tuples keep their shape
+        self._options_to_register: list[_DispatchOptions] = []
+        self._options: list[_DispatchOptions] = []
 
         self._q: asyncio.Queue[tuple[AnyHandler, ReceivedMessage, float]] = (
             asyncio.Queue()
@@ -83,18 +95,27 @@ class MessagePipeline:
         self._produce_tasks: set[asyncio.Task] = set()
         self._consume_tasks: set[asyncio.Task] = set()
 
-    def register(
+    def register(  # noqa: PLR0913 -- the filters are keyword only
         self,
         handler: AnyHandler,
         *,
         contacts: list[str] | bool = True,
         groups: list[str] | bool = True,
         f: Callable[[ReceivedMessage], bool] | None = None,
+        exclusive: bool = False,
+        priority: int = 0,
     ) -> None:
+        if priority != 0 and not exclusive:
+            error_msg = "priority only applies to exclusive handlers, "
+            error_msg += "register the handler with exclusive=True"
+            raise ValueError(error_msg)
+
         self._handlers_to_register.append((handler, contacts, groups, f))
+        self._options_to_register.append(_DispatchOptions(exclusive, priority))
 
     async def resolve_handlers(self) -> None:
         self.handlers = []
+        self._options = list(self._options_to_register)
         for handler, contacts, groups, f in self._handlers_to_register:
             group_ids: list[str] | bool
             if isinstance(groups, bool):
@@ -239,16 +260,72 @@ class MessagePipeline:
 
         return f(message)
 
+    def _should_react_for_trigger(
+        self,
+        handler: AnyHandler,
+        message: ReceivedMessage,
+        method_name: str,
+        f: Callable[[ReceivedMessage], bool] | None,
+    ) -> bool:
+        """Checks the `f` filter and the trigger decorator of the handler method.
+
+        Both are user code running in the producer: if they raise, the error is
+        logged and the handler is skipped instead of losing the message.
+        """
+        try:
+            if not self._should_react_for_lambda(message, f):
+                return False
+            trigger = _message_trigger(handler, method_name)
+            return trigger is None or trigger(message)
+        except Exception:
+            self._logger.exception(
+                "[%s] Filter or trigger raised, skipping the handler",
+                handler.__class__.__name__,
+            )
+            return False
+
     async def _dispatch_to_handlers(self, message: ReceivedMessage) -> None:
-        for handler, contacts, group_ids, f in self.handlers:
+        """Queues every handler that matches `message`. Among the matching exclusive
+        handlers only the one with the highest priority is queued, the first
+        registered one if several share it."""
+        dispatch = _MESSAGE_DISPATCH.get(type(message))
+        if dispatch is None:
+            self._logger.warning(
+                "[Bot] Unknown message type: %s, skipping dispatch", type(message)
+            )
+            return
+        handler_type, _, method_name = dispatch
+
+        # (registration index, handler), queued in registration order
+        selected: list[tuple[int, AnyHandler]] = []
+        exclusive: tuple[int, int, AnyHandler] | None = (
+            None  # (priority, index, handler)
+        )
+        for index, ((handler, contacts, group_ids, f), options) in enumerate(
+            zip(self.handlers, self._options, strict=True)
+        ):
+            if not isinstance(handler, handler_type):
+                continue
+
             if not self._should_react_for_contact(
                 message, contacts=contacts, group_ids=group_ids
             ):
                 continue
 
-            if not self._should_react_for_lambda(message, f):
+            if not self._should_react_for_trigger(handler, message, method_name, f):
                 continue
 
+            if not options.exclusive:
+                selected.append((index, handler))
+            elif exclusive is None or options.priority > exclusive[0]:
+                exclusive = (options.priority, index, handler)
+
+        if exclusive is not None:
+            _, index, handler = exclusive
+            selected.append((index, handler))
+            selected.sort(key=lambda item: item[0])
+
+        for _, handler in selected:
             await self._q.put((handler, message, time.perf_counter()))
 
     async def _consume(self, name: int) -> None:
