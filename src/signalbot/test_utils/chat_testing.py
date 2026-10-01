@@ -29,7 +29,51 @@ if TYPE_CHECKING:
 AsyncTestMethod = Callable[..., Awaitable[None]]
 
 
+class Envelope(str):
+    """A raw signal-cli-rest-api JSON envelope, exactly as received over the
+    websocket.
+
+    [mock_chat][signalbot.test_utils.mock_chat] and
+    [ReceiveMock.define][signalbot.test_utils.ReceiveMock.define] feed an
+    `Envelope` to the bot untouched, whereas a plain `str` is treated as the text
+    of a group message and wrapped with
+    [ChatTestCase.new_message][signalbot.test_utils.ChatTestCase.new_message].
+    Build envelopes with the `ChatTestCase.new_*` classmethods, or wrap your own
+    JSON with `Envelope(json.dumps(...))`.
+    """
+
+    __slots__ = ()
+
+
+class _TimestampClock:
+    """Millisecond timestamps that never repeat, even within the same
+    millisecond, so messages built back to back can be told apart."""
+
+    def __init__(self) -> None:
+        self._last = 0
+
+    def __call__(self) -> int:
+        self._last = max(int(time.time() * 1000), self._last + 1)
+        return self._last
+
+
+_new_timestamp = _TimestampClock()
+
+
 def mock_chat(*messages: str) -> Callable[[AsyncTestMethod], AsyncTestMethod]:
+    """Run the bot on `messages` before the decorated `ChatTestCase` test runs.
+
+    Each message is either an [Envelope][signalbot.test_utils.Envelope], fed to
+    the bot as-is, or a plain `str`, which becomes a group text message (see
+    [ChatTestCase.new_message][signalbot.test_utils.ChatTestCase.new_message]).
+
+    Before the test body runs, the signal-cli-rest-api calls are stubbed, the bot
+    is initialised (ready handlers run, but no background producer/consumer
+    tasks are started) and every message is dispatched to the registered
+    handlers, which run to completion one at a time. The test body then inspects
+    the stubs, e.g. `self.send_mock.results()`.
+    """
+
     def decorator_chat(func: AsyncTestMethod) -> AsyncTestMethod:
         @functools.wraps(func)
         async def wrapper_chat(
@@ -107,7 +151,7 @@ class ChatTestCase:
     @classmethod
     def _sent_message_envelope(
         cls, *, timestamp: int, new_uuid: str, **sent_message_body: object
-    ) -> str:
+    ) -> Envelope:
         message = {
             "account": ChatTestCase.phone_number,
             "envelope": {
@@ -140,11 +184,35 @@ class ChatTestCase:
                 },
             },
         }
-        return json.dumps(message)
+        return Envelope(json.dumps(message))
 
     @classmethod
-    def new_reaction_message(cls, emoji: str) -> str:
-        timestamp = int(time.time() * 1000)
+    def _received_envelope(
+        cls, *, source_uuid: str, timestamp: int, **envelope_body: object
+    ) -> Envelope:
+        """An envelope received from another account (not a sync message), so it
+        is a direct message to the bot unless its body carries `groupInfo`."""
+        message = {
+            "account": ChatTestCase.phone_number,
+            "envelope": {
+                "source": source_uuid,
+                "sourceNumber": None,
+                "sourceUuid": source_uuid,
+                "sourceName": "some_source_name",
+                "sourceDevice": 1,
+                "timestamp": timestamp,
+                "serverReceivedTimestamp": timestamp,
+                "serverDeliveredTimestamp": timestamp,
+                **envelope_body,
+            },
+        }
+        return Envelope(json.dumps(message))
+
+    @classmethod
+    def new_reaction_message(cls, emoji: str) -> Envelope:
+        """A reaction with `emoji`, sent in the test group by the bot's own
+        account."""
+        timestamp = _new_timestamp()
         new_uuid = str(uuid.uuid4())
         return cls._sent_message_envelope(
             timestamp=timestamp,
@@ -161,17 +229,140 @@ class ChatTestCase:
         )
 
     @classmethod
-    def new_message(cls, text: str) -> str:
-        timestamp = int(time.time() * 1000)
+    def new_message(cls, text: str) -> Envelope:
+        """A text message sent in the test group (`ChatTestCase.group_id`) by the
+        bot's own account.
+
+        This is what `mock_chat` turns plain `str` messages into.
+        """
+        timestamp = _new_timestamp()
         new_uuid = str(uuid.uuid4())
         return cls._sent_message_envelope(
             timestamp=timestamp, new_uuid=new_uuid, message=text
         )
 
+    @classmethod
+    def new_private_message(  # noqa: PLR0913
+        cls,
+        text: str | None,
+        *,
+        source_uuid: str | None = None,
+        timestamp: int | None = None,
+        quote: dict | None = None,
+        attachments: list[dict] | None = None,
+        view_once: bool = False,
+    ) -> Envelope:
+        """A direct (one-on-one) message to the bot, so `message.is_private()` is
+        true and it reaches handlers registered with `groups=False`.
+
+        Args:
+            text: The message text.
+            source_uuid: The sender's uuid; a random uuid4 if `None`.
+            timestamp: The message timestamp in milliseconds; a fresh, unique one
+                if `None`. Pass it explicitly to refer to this message later
+                (e.g. from `new_edit_message` or `new_remote_delete`).
+            quote: The quoted message in signal-cli's raw format, e.g.
+                `{"id": <quoted timestamp>, "author": ..., "authorUuid": ...,
+                "text": ...}`.
+            attachments: Attachments in signal-cli's raw format, e.g.
+                `{"id": ..., "contentType": "image/png", "isVoiceNote": False}`.
+            view_once: Whether the message is a view-once message.
+        """
+        if timestamp is None:
+            timestamp = _new_timestamp()
+        data_message: dict[str, object] = {
+            "timestamp": timestamp,
+            "message": text,
+            "expiresInSeconds": 0,
+            "viewOnce": view_once,
+        }
+        if quote is not None:
+            data_message["quote"] = quote
+        if attachments is not None:
+            data_message["attachments"] = attachments
+        return cls._received_envelope(
+            source_uuid=source_uuid or str(uuid.uuid4()),
+            timestamp=timestamp,
+            dataMessage=data_message,
+        )
+
+    @classmethod
+    def new_edit_message(
+        cls,
+        text: str,
+        *,
+        source_uuid: str,
+        target_sent_timestamp: int,
+        timestamp: int | None = None,
+    ) -> Envelope:
+        """A direct message from `source_uuid` editing their earlier message sent
+        at `target_sent_timestamp`; it is received as an
+        [EditMessage][signalbot.messages.EditMessage] by `DataMessageHandler`s.
+
+        Args:
+            text: The new text of the message.
+            source_uuid: The sender's uuid, i.e. the author of the edited message.
+            target_sent_timestamp: The timestamp of the message being edited.
+            timestamp: The timestamp of the edit; a fresh, unique one if `None`.
+        """
+        if timestamp is None:
+            timestamp = _new_timestamp()
+        return cls._received_envelope(
+            source_uuid=source_uuid,
+            timestamp=timestamp,
+            editMessage={
+                "targetSentTimestamp": target_sent_timestamp,
+                "dataMessage": {
+                    "timestamp": timestamp,
+                    "message": text,
+                    "expiresInSeconds": 0,
+                    "viewOnce": False,
+                },
+            },
+        )
+
+    @classmethod
+    def new_remote_delete(
+        cls,
+        *,
+        source_uuid: str,
+        target_sent_timestamp: int,
+        timestamp: int | None = None,
+    ) -> Envelope:
+        """A direct message from `source_uuid` deleting their earlier message sent
+        at `target_sent_timestamp`; it is received by `RemoteDeleteHandler`s as a
+        [RemoteDelete][signalbot.messages.RemoteDelete] whose `timestamp` is
+        `target_sent_timestamp`.
+
+        Args:
+            source_uuid: The sender's uuid, i.e. the author of the deleted message.
+            target_sent_timestamp: The timestamp of the message being deleted.
+            timestamp: The timestamp of the delete itself; a fresh, unique one if
+                `None`.
+        """
+        if timestamp is None:
+            timestamp = _new_timestamp()
+        return cls._received_envelope(
+            source_uuid=source_uuid,
+            timestamp=timestamp,
+            dataMessage={
+                "timestamp": timestamp,
+                "expiresInSeconds": 0,
+                "viewOnce": False,
+                "remoteDelete": {"timestamp": target_sent_timestamp},
+            },
+        )
+
 
 class ReceiveMock(MagicMock):
     def define(self, messages: Sequence[str]) -> None:
-        json_messages = [ChatTestCase.new_message(m) for m in messages]
+        """Make `receive()` yield `messages`: an
+        [Envelope][signalbot.test_utils.Envelope] is yielded as-is, a plain `str`
+        is wrapped with `ChatTestCase.new_message`."""
+        json_messages = [
+            m if isinstance(m, Envelope) else ChatTestCase.new_message(m)
+            for m in messages
+        ]
         mock_iterator = AsyncMock()
         mock_iterator.__aiter__.return_value = json_messages
         self.return_value = mock_iterator
