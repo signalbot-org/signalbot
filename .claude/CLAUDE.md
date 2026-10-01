@@ -106,6 +106,8 @@ their own public types via their own `__init__.py`.
 - `signalbot.test_utils.ChatTestCase` + `@mock_chat` (`src/signalbot/test_utils/chat_testing.py`) let a bot
   author unit-test handlers without a real `signal-cli-rest-api` — send/receive are mocked. See
   `examples/commands/tests/test_ping.py` for the pattern; this is also shipped to downstream users.
+  `ChatTestCase.new_private_message`/`new_edit_message`/`new_remote_delete` build raw `Envelope`s for
+  non-group messages; `tests/integration/test_chat_testing.py` tests the harness itself.
 - `asyncio_mode = "auto"` (pytest.ini via `pyproject.toml`) — async test functions don't need
   `@pytest.mark.asyncio`.
 

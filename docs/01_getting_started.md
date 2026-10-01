@@ -98,6 +98,49 @@ Confirm that the bot received a raw message, that the consumer worked on the mes
 
 ## Mock chat
 You can mock receiving and sending messages to speed up development time.
-To do so, you can use [signalbot.test_utils.ChatTestCase](https://github.com/signalbot-org/signalbot/blob/main/src/signalbot/test_utils/chat_testing.py#L77) which sets up a "skeleton" bot.
-Then, you can send messages using the [@mock_chat](https://github.com/signalbot-org/signalbot/blob/main/src/signalbot/test_utils/chat_testing.py#L32) decorator.
+To do so, subclass [signalbot.test_utils.ChatTestCase](reference/test_utils.md#signalbot.test_utils.ChatTestCase), which sets up a "skeleton" bot, and feed it messages with the [@mock_chat](reference/test_utils.md#signalbot.test_utils.mock_chat) decorator.
+Before the test body runs, every message is dispatched to the registered handlers and each handler runs to completion, once per message.
 You can find an example implementation in [examples/commands/tests/test_ping.py](https://github.com/signalbot-org/signalbot/blob/main/examples/commands/tests/test_ping.py).
+
+A plain string passed to `@mock_chat` is the text of a message in the test group.
+To test other kinds of messages, pass an envelope built with one of `ChatTestCase`'s classmethods:
+
+- `new_message(text)`: a group message, which is what plain strings turn into.
+- `new_private_message(text, source_uuid=..., quote=..., attachments=...)`: a direct message to the bot, for handlers registered with `groups=False`.
+- `new_edit_message(text, source_uuid=..., target_sent_timestamp=...)`: an edit of an earlier message, received as an `EditMessage`.
+- `new_remote_delete(source_uuid=..., target_sent_timestamp=...)`: a delete of an earlier message, received by `RemoteDeleteHandler`s.
+- `new_reaction_message(emoji)`: a reaction in the test group.
+
+Every call to signal-cli-rest-api is stubbed, and the stubs are available on the test case to make assertions on:
+`send_mock`, `react_mock`, `remote_delete_mock`, `receipts_mock`, `start_typing_mock`, `stop_typing_mock` and `download_attachment_mock`.
+`send_mock.results()` returns the sent messages in order, and each sent message gets its own increasing timestamp, so you can check which message a later edit, delete or quote refers to.
+
+```python
+import pytest
+
+from signalbot import ChatTestCase, mock_chat
+
+from mybot.commands import EchoCommand
+
+USER = "11111111-1111-1111-1111-111111111111"
+
+
+class TestEcho(ChatTestCase):
+    @pytest.fixture(autouse=True)
+    def setup_fixture(self):
+        self.setup()
+        self.signal_bot.register(EchoCommand(), groups=False)
+
+    @mock_chat(
+        ChatTestCase.new_private_message("hello", source_uuid=USER, timestamp=1),
+        ChatTestCase.new_edit_message(
+            "hello again", source_uuid=USER, target_sent_timestamp=1
+        ),
+    )
+    async def test_echo(self, mocker):
+        sent = self.send_mock.results()
+        assert [message.message for message in sent] == ["hello", "hello again"]
+        assert sent[0].recipients == [USER]
+```
+
+If your bot is built by your own code, override `ChatTestCase.make_bot()` to return its `SignalBot`.
