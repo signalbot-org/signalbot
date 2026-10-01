@@ -1,6 +1,7 @@
 """Tests for the `signalbot.test_utils` chat harness itself."""
 
 import asyncio
+from collections.abc import Mapping
 
 import pytest
 from pytest_mock import MockerFixture
@@ -11,6 +12,7 @@ from signalbot import (
     ReceiptType,
     RemoteDeleteContext,
     RemoteDeleteHandler,
+    SignalBot,
 )
 from signalbot._client import SignalAPI
 from signalbot.messages import (
@@ -282,3 +284,26 @@ class TestExtraStubs(ChatTestCase):
         assert deleted.recipient == SENDER_UUID
         assert deleted.timestamp == SendMock.FIRST_TIMESTAMP
         assert self.handler.deleted_at == RemoteDeleteMock.FIRST_TIMESTAMP
+
+
+class EchoApp:
+    """Stands in for an application that builds its own SignalBot."""
+
+    def __init__(self, config: Mapping) -> None:
+        self.bot = SignalBot(config)
+        self.bot.register(SlowEchoCommand())
+
+
+class TestMakeBot(ChatTestCase):
+    def make_bot(self) -> SignalBot:
+        self.app = EchoApp(dict(self.config))
+        return self.app.bot
+
+    @pytest.fixture(autouse=True)
+    def setup_fixture(self):
+        self.setup()
+
+    @mock_chat("hi")
+    async def test_uses_custom_bot(self, mocker: MockerFixture):
+        assert self.signal_bot is self.app.bot
+        assert [sent.message for sent in self.send_mock.results()] == ["echo hi"]

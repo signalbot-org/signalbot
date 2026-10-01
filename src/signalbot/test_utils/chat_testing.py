@@ -148,6 +148,14 @@ def mock_chat(*messages: str) -> Callable[[AsyncTestMethod], AsyncTestMethod]:
 
 
 class ChatTestCase:
+    """Base class for testing handlers against a mocked signal-cli-rest-api.
+
+    Call `setup()` from a fixture, register handlers on `self.signal_bot` and
+    decorate test methods with [mock_chat][signalbot.test_utils.mock_chat].
+    Messages come from the test group (`group_id`, `group_name`) unless built
+    with one of the private `new_*` classmethods.
+    """
+
     signal_service = "127.0.0.1:8080"
     phone_number = "+49123456789"
 
@@ -178,8 +186,26 @@ class ChatTestCase:
     download_attachment_mock: AsyncMock
     """Stub for downloading received attachments; returns empty base64 content."""
 
+    signal_bot: SignalBot
+    """The bot `mock_chat` feeds messages to; set by `setup()`."""
+
+    def make_bot(self) -> SignalBot:
+        """Build the bot under test; called by `setup()`.
+
+        Override it when the bot is built by your own code, e.g. an application
+        object that creates its `SignalBot` internally, and return that
+        `SignalBot` (keeping a reference to the wrapper on `self` if tests need
+        it). Use `self.config` for a configuration pointing at the mocked
+        service. Assigning `self.signal_bot` directly works too.
+        """
+        return SignalBot(ChatTestCase.config)
+
     def setup(self) -> None:
-        self.signal_bot = SignalBot(ChatTestCase.config)
+        """Create the bot under test as `self.signal_bot` (see `make_bot`).
+
+        Call it from a fixture, then register handlers on `self.signal_bot`.
+        """
+        self.signal_bot = self.make_bot()
 
     async def run_bot(self) -> None:
         producer_id = 1337
