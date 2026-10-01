@@ -13,6 +13,7 @@ from unittest.mock import DEFAULT, AsyncMock, MagicMock
 from signalbot._generated import (
     AddMembers,
     EditGroup,
+    RemoteDeleteResponse,
     SendMessageResponse,
     SendMessages,
 )
@@ -25,7 +26,11 @@ from signalbot.handlers import DataMessageHandler
 if TYPE_CHECKING:
     from pytest_mock import MockerFixture
 
-    from signalbot._generated import SendMessageV2, SendReactionRequest
+    from signalbot._generated import (
+        RemoteDeleteRequest,
+        SendMessageV2,
+        SendReactionRequest,
+    )
     from signalbot.context import DataMessageContext
 
 AsyncTestMethod = Callable[..., Awaitable[None]]
@@ -69,7 +74,8 @@ def mock_chat(*messages: str) -> Callable[[AsyncTestMethod], AsyncTestMethod]:
     the bot as-is, or a plain `str`, which becomes a group text message (see
     [ChatTestCase.new_message][signalbot.test_utils.ChatTestCase.new_message]).
 
-    Before the test body runs, the signal-cli-rest-api calls are stubbed, the bot
+    Before the test body runs, the signal-cli-rest-api calls are stubbed (see the
+    `*_mock` attributes on `ChatTestCase`), the bot
     is initialised (ready handlers run, but no background producer/consumer
     tasks are started) and every message is dispatched to the registered
     handlers, which run to completion one at a time. The test body then inspects
@@ -108,6 +114,27 @@ def mock_chat(*messages: str) -> Callable[[AsyncTestMethod], AsyncTestMethod]:
                 "signalbot._client.SignalAPI.check_signal_service",
                 new_callable=CheckSignalServiceMock,
             )
+            self.receipts_mock = mocker.patch(
+                "signalbot._client.receipts.ReceiptsClient.send",
+                new_callable=AsyncMock,
+            )
+            self.start_typing_mock = mocker.patch(
+                "signalbot._client.messages.MessagesClient.start_typing",
+                new_callable=AsyncMock,
+            )
+            self.stop_typing_mock = mocker.patch(
+                "signalbot._client.messages.MessagesClient.stop_typing",
+                new_callable=AsyncMock,
+            )
+            self.remote_delete_mock = mocker.patch(
+                "signalbot._client.messages.MessagesClient.remote_delete",
+                new_callable=RemoteDeleteMock,
+            )
+            self.download_attachment_mock = mocker.patch(
+                "signalbot._client.attachments.AttachmentsClient.download",
+                new_callable=AsyncMock,
+                return_value="",
+            )
 
             receive_mock.define(messages)
             await self.signal_bot._async_init()
@@ -137,7 +164,19 @@ class ChatTestCase:
 
     # Populated by `mock_chat` once a test is decorated with it.
     send_mock: SendMock
+    """Stub for sending messages (`bot.messages.send`, `context.send`, ...)."""
     react_mock: ReactMock
+    """Stub for sending reactions."""
+    remote_delete_mock: RemoteDeleteMock
+    """Stub for deleting sent messages (`bot.messages.remote_delete`)."""
+    receipts_mock: AsyncMock
+    """Stub for sending read/viewed receipts; called with a `Receipt` request."""
+    start_typing_mock: AsyncMock
+    """Stub for showing the typing indicator."""
+    stop_typing_mock: AsyncMock
+    """Stub for hiding the typing indicator."""
+    download_attachment_mock: AsyncMock
+    """Stub for downloading received attachments; returns empty base64 content."""
 
     def setup(self) -> None:
         self.signal_bot = SignalBot(ChatTestCase.config)
@@ -415,6 +454,30 @@ class ReactMock(_FirstArgResultsMock):
 
     def results(self) -> list[SendReactionRequest]:
         """The reaction request passed to each call, in call order."""
+        return self._first_args()
+
+
+class RemoteDeleteMock(_FirstArgResultsMock):
+    """Stub for deleting sent messages.
+
+    Each call returns a fresh, strictly increasing timestamp (`FIRST_TIMESTAMP`,
+    then +1 per call). Setting `return_value` explicitly overrides this.
+    """
+
+    FIRST_TIMESTAMP = 1638715600000
+
+    def __init__(self, **kwargs: object) -> None:
+        super().__init__(**kwargs)
+        self._timestamps = itertools.count(self.FIRST_TIMESTAMP)
+        self.side_effect = self._respond
+
+    def _respond(self, _remote_delete_request: RemoteDeleteRequest) -> object:
+        if self._mock_return_value is not DEFAULT:
+            return DEFAULT
+        return RemoteDeleteResponse(timestamp=str(next(self._timestamps)))
+
+    def results(self) -> list[RemoteDeleteRequest]:
+        """The delete request passed to each call, in call order."""
         return self._first_args()
 
 

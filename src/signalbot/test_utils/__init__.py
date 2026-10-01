@@ -5,6 +5,7 @@ from signalbot.test_utils.chat_testing import (
     GetAllMock,
     ReactMock,
     ReceiveMock,
+    RemoteDeleteMock,
     SendMock,
     mock_chat,
 )
@@ -16,6 +17,7 @@ __all__ = [
     "GetAllMock",
     "ReactMock",
     "ReceiveMock",
+    "RemoteDeleteMock",
     "SendMock",
     "mock_chat",
 ]

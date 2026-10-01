@@ -8,6 +8,7 @@ from pytest_mock import MockerFixture
 from signalbot import (
     DataMessageContext,
     DataMessageHandler,
+    ReceiptType,
     RemoteDeleteContext,
     RemoteDeleteHandler,
 )
@@ -21,7 +22,13 @@ from signalbot.messages import (
     SentMessage,
     parse,
 )
-from signalbot.test_utils import ChatTestCase, Envelope, SendMock, mock_chat
+from signalbot.test_utils import (
+    ChatTestCase,
+    Envelope,
+    RemoteDeleteMock,
+    SendMock,
+    mock_chat,
+)
 
 SENDER_UUID = "11111111-1111-1111-1111-111111111111"
 OTHER_UUID = "22222222-2222-2222-2222-222222222222"
@@ -232,3 +239,46 @@ class TestSendMock(ChatTestCase):
         send_mock = SendMock()
         send_mock.return_value = ["custom"]
         assert await send_mock(object()) == ["custom"]
+
+
+class ChattyCommand(DataMessageHandler):
+    """Touches every stubbed endpoint a typical command handler uses."""
+
+    async def handle_data_message(self, context: DataMessageContext):
+        await context.send_receipt(ReceiptType.READ)
+        await context.start_typing()
+        sent = await context.reply(SendMessage(text="reply"))
+        await context.stop_typing()
+        self.deleted_at = await context.remote_delete(sent)
+
+
+class TestExtraStubs(ChatTestCase):
+    @pytest.fixture(autouse=True)
+    def setup_fixture(self):
+        self.setup()
+        self.handler = ChattyCommand()
+        self.signal_bot.register(self.handler)
+
+    @mock_chat(
+        ChatTestCase.new_private_message(
+            "hi",
+            source_uuid=SENDER_UUID,
+            timestamp=7,
+            attachments=[
+                {"id": "a.png", "contentType": "image/png", "isVoiceNote": False}
+            ],
+        )
+    )
+    async def test_stubs(self, mocker: MockerFixture):
+        assert self.receipts_mock.call_count == 1
+        assert self.receipts_mock.call_args.args[0].timestamp == 7
+        assert self.start_typing_mock.call_count == 1
+        assert self.stop_typing_mock.call_count == 1
+        assert self.download_attachment_mock.call_count == 1
+
+        [reply] = self.send_mock.results()
+        assert reply.quote_timestamp == 7
+        [deleted] = self.remote_delete_mock.results()
+        assert deleted.recipient == SENDER_UUID
+        assert deleted.timestamp == SendMock.FIRST_TIMESTAMP
+        assert self.handler.deleted_at == RemoteDeleteMock.FIRST_TIMESTAMP
