@@ -5,7 +5,6 @@ import re
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeAlias, TypeVar
-from weakref import WeakKeyDictionary
 
 from signalbot.context import (
     DataMessageContext,
@@ -19,32 +18,31 @@ P = ParamSpec("P")
 
 MessagePredicate: TypeAlias = Callable[[ReceivedMessage], bool]
 
-# The message predicate of every handler method decorated with a trigger decorator,
-# so the pipeline can check it before queuing the handler (see `_message_trigger`).
-_TRIGGERS: WeakKeyDictionary[Callable[..., Any], MessagePredicate] = WeakKeyDictionary()
+# Attribute holding the message predicate of a handler method decorated with a
+# trigger decorator, so the pipeline can check it before queuing the handler (see
+# `_message_trigger`). `functools.wraps` copies it to any decorator stacked on top.
+_TRIGGER_ATTR = "_signalbot_trigger"
 
 
-def _register_trigger(
-    wrapper: Callable[..., Any],
-    func: Callable[..., Any],
-    predicate: MessagePredicate,
-) -> None:
-    """Records `predicate` as the trigger of `wrapper`. When decorators are stacked,
-    `func` is the inner decorator's wrapper, and both triggers must match."""
-    inner = _TRIGGERS.get(func)
+def _register_trigger(wrapper: Callable[..., Any], predicate: MessagePredicate) -> None:
+    """Records `predicate` as the trigger of `wrapper`. When trigger decorators are
+    stacked, `wrapper` already carries the inner trigger, and both must match."""
+    inner: MessagePredicate | None = getattr(wrapper, _TRIGGER_ATTR, None)
     if inner is None:
-        _TRIGGERS[wrapper] = predicate
+        setattr(wrapper, _TRIGGER_ATTR, predicate)
     else:
-        _TRIGGERS[wrapper] = lambda message: predicate(message) and inner(message)
+        setattr(
+            wrapper,
+            _TRIGGER_ATTR,
+            lambda message: predicate(message) and inner(message),
+        )
 
 
 def _message_trigger(handler: object, method_name: str) -> MessagePredicate | None:
     """The trigger of `handler`'s `method_name`, None if it isn't decorated with a
     trigger decorator."""
     method = getattr(type(handler), method_name, None)
-    if method is None:
-        return None
-    return _TRIGGERS.get(method)
+    return getattr(method, _TRIGGER_ATTR, None)
 
 
 if TYPE_CHECKING:
@@ -72,11 +70,13 @@ def regex_triggered(
             message text against.
     """
 
+    patterns = [re.compile(pattern) for pattern in by]
+
     def matches(message: ReceivedMessage) -> bool:
         if not isinstance(message, DataMessage) or message.text is None:
             return False
         text = message.text
-        return any(re.search(pattern, text) for pattern in by)
+        return any(pattern.search(text) for pattern in patterns)
 
     def decorator_regex_triggered(
         func: Callable[P, CoroutineType[Any, Any, T]],
@@ -95,7 +95,7 @@ def regex_triggered(
                 return None
             return await func(*args, **kwargs)
 
-        _register_trigger(wrapper_regex_triggered, func, matches)
+        _register_trigger(wrapper_regex_triggered, matches)
         return wrapper_regex_triggered
 
     return decorator_regex_triggered
@@ -115,7 +115,7 @@ def text_triggered(
         case_sensitive: Whether the matching should be case sensitive.
     """
 
-    by_words = by if case_sensitive else [t.lower() for t in by]
+    by_words = frozenset(by if case_sensitive else (t.lower() for t in by))
 
     def matches(message: ReceivedMessage) -> bool:
         if not isinstance(message, DataMessage) or message.text is None:
@@ -138,7 +138,7 @@ def text_triggered(
                 return None
             return await func(*args, **kwargs)
 
-        _register_trigger(wrapper_triggered, func, matches)
+        _register_trigger(wrapper_triggered, matches)
         return wrapper_triggered
 
     return decorator_triggered
@@ -176,7 +176,7 @@ def reaction_triggered(
                 return None
             return await func(*args, **kwargs)
 
-        _register_trigger(wrapper_reaction_triggered, func, matches)
+        _register_trigger(wrapper_reaction_triggered, matches)
 
         return wrapper_reaction_triggered
 

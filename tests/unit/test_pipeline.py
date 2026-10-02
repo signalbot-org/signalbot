@@ -347,14 +347,11 @@ class TestConsumeResilience(TestCommon):
             await pipeline._consume_new_item(1)
 
 
-class _Recorder(DataMessageHandler):
+class _Recorder(DummyHandler):
     """Catch-all handler, only used to check which handlers get queued."""
 
     def __init__(self, name: str) -> None:
         self.name = name
-
-    async def handle_data_message(self, context: DataMessageContext) -> None:
-        pass
 
 
 class _Ping(_Recorder):

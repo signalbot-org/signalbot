@@ -303,7 +303,7 @@ class EchoFallback(DataMessageHandler):
         await context.send(SendMessage(text=f"echo: {context.message.text}"))
 
 
-class TestExclusiveCommandsWithFallback(TestCommon):
+class TestExclusiveCommandsWithFallback(ChatTestCase):
     @pytest.fixture(autouse=True)
     def setup_fixture(self):
         self.setup()

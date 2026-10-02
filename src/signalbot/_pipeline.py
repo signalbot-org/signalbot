@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import itertools
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
 from signalbot._utils.retry import rerun_on_exception
@@ -60,9 +60,13 @@ _MESSAGE_DISPATCH: dict[type, tuple[type, type, str]] = {
 
 
 @dataclass(frozen=True)
-class _DispatchOptions:
-    exclusive: bool = False
-    priority: int = 0
+class _Registration:
+    handler: AnyHandler
+    contacts: list[str] | bool
+    groups: list[str] | bool  # names or ids as registered, ids once resolved
+    f: Callable[[ReceivedMessage], bool] | None
+    exclusive: bool
+    priority: int
 
 
 class MessagePipeline:
@@ -82,12 +86,8 @@ class MessagePipeline:
         self._groups = groups
         self._logger = logger
 
-        self._handlers_to_register: HandlerList = []  # populated by .register()
-        self.handlers: HandlerList = []  # populated by .resolve_handlers()
-        # Same order as `_handlers_to_register` and `handlers`, kept apart so the public
-        # `HandlerList` tuples keep their shape
-        self._options_to_register: list[_DispatchOptions] = []
-        self._options: list[_DispatchOptions] = []
+        self._handlers_to_register: list[_Registration] = []  # populated by .register()
+        self._handlers: list[_Registration] = []  # populated by .resolve_handlers()
 
         self._q: asyncio.Queue[tuple[AnyHandler, ReceivedMessage, float]] = (
             asyncio.Queue()
@@ -110,33 +110,39 @@ class MessagePipeline:
             error_msg += "register the handler with exclusive=True"
             raise ValueError(error_msg)
 
-        self._handlers_to_register.append((handler, contacts, groups, f))
-        self._options_to_register.append(_DispatchOptions(exclusive, priority))
+        self._handlers_to_register.append(
+            _Registration(handler, contacts, groups, f, exclusive, priority)
+        )
+
+    @property
+    def handlers(self) -> HandlerList:
+        return [(r.handler, r.contacts, r.groups, r.f) for r in self._handlers]
 
     async def resolve_handlers(self) -> None:
-        self.handlers = []
-        self._options = list(self._options_to_register)
-        for handler, contacts, groups, f in self._handlers_to_register:
+        self._handlers = []
+        for registration in self._handlers_to_register:
             group_ids: list[str] | bool
-            if isinstance(groups, bool):
-                group_ids = groups
+            if isinstance(registration.groups, bool):
+                group_ids = registration.groups
             else:
                 group_ids = []
-                for group in groups:
+                for group in registration.groups:
                     group_id = self._groups.resolve(group)
                     if group_id is not None:
                         group_ids.append(group_id)
                     else:
-                        error_msg = f"[Bot] [{handler.__class__.__name__}] '{group}' "
-                        error_msg += "is not a valid group name or id"
+                        error_msg = (
+                            f"[Bot] [{registration.handler.__class__.__name__}] "
+                        )
+                        error_msg += f"'{group}' is not a valid group name or id"
                         self._logger.warning(error_msg)
 
-            self.handlers.append((handler, contacts, group_ids, f))
+            self._handlers.append(replace(registration, groups=group_ids))
 
     async def run_ready_handlers(self) -> None:
-        for handler, *_ in self.handlers:
-            if isinstance(handler, ReadyHandler):
-                await handler.handle_ready(ReadyContext(self._bot))
+        for registration in self._handlers:
+            if isinstance(registration.handler, ReadyHandler):
+                await registration.handler.handle_ready(ReadyContext(self._bot))
 
     def _store_reference_to_task(
         self,
@@ -296,37 +302,24 @@ class MessagePipeline:
             return
         handler_type, _, method_name = dispatch
 
-        # (registration index, handler), queued in registration order
-        selected: list[tuple[int, AnyHandler]] = []
-        exclusive: tuple[int, int, AnyHandler] | None = (
-            None  # (priority, index, handler)
+        matching = [
+            r
+            for r in self._handlers
+            if isinstance(r.handler, handler_type)
+            and self._should_react_for_contact(
+                message, contacts=r.contacts, group_ids=r.groups
+            )
+            and self._should_react_for_trigger(r.handler, message, method_name, r.f)
+        ]
+        # `max` keeps the first registered one on ties
+        winner = max(
+            (r for r in matching if r.exclusive),
+            key=lambda r: r.priority,
+            default=None,
         )
-        for index, ((handler, contacts, group_ids, f), options) in enumerate(
-            zip(self.handlers, self._options, strict=True)
-        ):
-            if not isinstance(handler, handler_type):
-                continue
-
-            if not self._should_react_for_contact(
-                message, contacts=contacts, group_ids=group_ids
-            ):
-                continue
-
-            if not self._should_react_for_trigger(handler, message, method_name, f):
-                continue
-
-            if not options.exclusive:
-                selected.append((index, handler))
-            elif exclusive is None or options.priority > exclusive[0]:
-                exclusive = (options.priority, index, handler)
-
-        if exclusive is not None:
-            _, index, handler = exclusive
-            selected.append((index, handler))
-            selected.sort(key=lambda item: item[0])
-
-        for _, handler in selected:
-            await self._q.put((handler, message, time.perf_counter()))
+        for r in matching:
+            if not r.exclusive or r is winner:
+                await self._q.put((r.handler, message, time.perf_counter()))
 
     async def _consume(self, name: int) -> None:
         self._logger.info("[Bot] Consumer #%s started", name)
