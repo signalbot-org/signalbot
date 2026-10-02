@@ -5,7 +5,7 @@ The classes in this folder were automatically generated from the [JSON Schema](h
 The `signal-cli-rest-api.json` JSON Schema file was copied over from the [signal-cli-rest-api repository](https://bbernhard.github.io/signal-cli-rest-api/).
 From it's documentation [url](https://bbernhard.github.io/signal-cli-rest-api/swagger.json).
 
-To generate the python files run this command at the root of the repository
+To generate the python files run this command
 
 ```bash
 uv run datamodel-codegen --profile signal-cli-rest-api

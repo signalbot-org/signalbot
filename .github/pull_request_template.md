@@ -8,4 +8,4 @@ Link to issue(s) if appropiate
 - [ ] The unit test pass `uv run pytest`
 - [ ] Prek is installed `uv run prek install`
 - [ ] The prek checks pass `uv run prek run --all-files`
-- [ ] Follow the [extending](https://signalbot-org.github.io/signalbot/latest/06_extending) steps (only relevant when adding support for new incoming / outgoing message types)
+- [ ] Follow the [extending](https://signalbot-org.github.io/signalbot/latest/contributing/) steps (only relevant when adding support for new incoming / outgoing message types)
