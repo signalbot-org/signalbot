@@ -278,28 +278,19 @@ class TrackingDataMessageHandler(DataMessageHandler):
         self.contexts.append(context)
 
 
-class TestInvokeHandler(TestCommon):
-    async def test_dispatches_known_message_type_to_matching_handler(self):
+class TestConsumeDispatched(TestCommon):
+    async def test_consumer_calls_the_handler_with_the_message_context(self):
         pipeline = self.signal_bot._pipeline
         handler = TrackingDataMessageHandler()
+        self.signal_bot.register(handler)
+        await pipeline.resolve_handlers()
         message = _private_message()
 
-        await pipeline._invoke_handler(handler, message)
+        await pipeline._dispatch_to_handlers(message)
+        await pipeline._consume_new_item(1)
 
         assert len(handler.contexts) == 1
         assert handler.contexts[0].message is message
-
-    async def test_unknown_message_type_logs_warning_and_does_not_raise(
-        self, caplog: pytest.LogCaptureFixture
-    ):
-        pipeline = self.signal_bot._pipeline
-        handler = TrackingDataMessageHandler()
-
-        with caplog.at_level(logging.WARNING):
-            await pipeline._invoke_handler(handler, cast("ReceivedMessage", object()))
-
-        assert "Unknown message type" in caplog.text
-        assert handler.contexts == []
 
 
 class TestConsumeResilience(TestCommon):
@@ -317,12 +308,10 @@ class TestConsumeResilience(TestCommon):
             async def handle_data_message(self, context: DataMessageContext) -> None:
                 succeeded.set()
 
-        await pipeline._q.put(
-            (ExplodingHandler(), _private_message(), asyncio.get_running_loop().time())
-        )
-        await pipeline._q.put(
-            (RecoveringHandler(), _private_message(), asyncio.get_running_loop().time())
-        )
+        self.signal_bot.register(ExplodingHandler())
+        self.signal_bot.register(RecoveringHandler())
+        await pipeline.resolve_handlers()
+        await pipeline._dispatch_to_handlers(_private_message())
 
         consume_task = asyncio.create_task(pipeline._consume(1))
         try:
@@ -339,9 +328,9 @@ class TestConsumeResilience(TestCommon):
                 error_msg = "boom"
                 raise RuntimeError(error_msg)
 
-        await pipeline._q.put(
-            (ExplodingHandler(), _private_message(), asyncio.get_running_loop().time())
-        )
+        self.signal_bot.register(ExplodingHandler())
+        await pipeline.resolve_handlers()
+        await pipeline._dispatch_to_handlers(_private_message())
 
         with pytest.raises(RuntimeError, match="boom"):
             await pipeline._consume_new_item(1)
@@ -406,18 +395,18 @@ class TestDispatch(TestCommon):
         assert await self.queued_for("pong 1") == []
 
     async def test_only_the_first_matching_exclusive_handler_runs(self):
-        self.signal_bot.register(_Ping("ping"), exclusive=True)
-        self.signal_bot.register(_Digits("digits"), exclusive=True)
-        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+        self.signal_bot.register(_Ping("ping"), priority=0)
+        self.signal_bot.register(_Digits("digits"), priority=0)
+        self.signal_bot.register(_Recorder("fallback"), priority=0)
 
         assert await self.queued_for("ping") == ["ping"]
         assert await self.queued_for("call 112") == ["digits"]
         assert await self.queued_for("hello") == ["fallback"]
 
     async def test_the_highest_priority_wins_regardless_of_registration_order(self):
-        self.signal_bot.register(_Recorder("fallback"), exclusive=True, priority=-1)
-        self.signal_bot.register(_Digits("digits"), exclusive=True)
-        self.signal_bot.register(_Ping("ping"), exclusive=True, priority=10)
+        self.signal_bot.register(_Recorder("fallback"), priority=-1)
+        self.signal_bot.register(_Digits("digits"), priority=0)
+        self.signal_bot.register(_Ping("ping"), priority=10)
 
         assert await self.queued_for("ping") == ["ping"]
         assert await self.queued_for("call 112") == ["digits"]
@@ -425,27 +414,23 @@ class TestDispatch(TestCommon):
 
     async def test_non_exclusive_handlers_run_alongside_in_registration_order(self):
         self.signal_bot.register(_Recorder("before"))
-        self.signal_bot.register(_Ping("ping"), exclusive=True, priority=1)
-        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+        self.signal_bot.register(_Ping("ping"), priority=1)
+        self.signal_bot.register(_Recorder("fallback"), priority=0)
         self.signal_bot.register(_Recorder("after"))
 
         assert await self.queued_for("ping") == ["before", "ping", "after"]
         assert await self.queued_for("hello") == ["before", "fallback", "after"]
 
     async def test_exclusive_handlers_of_other_message_types_do_not_compete(self):
-        self.signal_bot.register(_ThumbsUp(), exclusive=True, priority=100)
-        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+        self.signal_bot.register(_ThumbsUp(), priority=100)
+        self.signal_bot.register(_Recorder("fallback"), priority=0)
 
         assert await self.queued_for("hello") == ["fallback"]
 
     async def test_contact_and_lambda_filters_apply_before_exclusivity(self):
-        self.signal_bot.register(
-            _Ping("other-contact"), contacts=["+1"], exclusive=True
-        )
-        self.signal_bot.register(
-            _Ping("filtered"), f=lambda _: False, exclusive=True, priority=5
-        )
-        self.signal_bot.register(_Recorder("fallback"), exclusive=True)
+        self.signal_bot.register(_Ping("other-contact"), contacts=["+1"], priority=0)
+        self.signal_bot.register(_Ping("filtered"), f=lambda _: False, priority=5)
+        self.signal_bot.register(_Recorder("fallback"), priority=0)
 
         assert await self.queued_for("ping") == ["fallback"]
 
@@ -456,7 +441,7 @@ class TestDispatch(TestCommon):
             error_msg = "boom"
             raise RuntimeError(error_msg)
 
-        self.signal_bot.register(_Recorder("broken"), f=explode, exclusive=True)
+        self.signal_bot.register(_Recorder("broken"), f=explode, priority=0)
         self.signal_bot.register(_Recorder("ok"))
 
         with caplog.at_level(logging.ERROR):
@@ -475,7 +460,3 @@ class TestDispatch(TestCommon):
 
         assert pipeline._q.empty()
         assert "Unknown message type" in caplog.text
-
-    def test_priority_requires_exclusive(self):
-        with pytest.raises(ValueError, match="exclusive=True"):
-            self.signal_bot.register(_Recorder("all"), priority=1)

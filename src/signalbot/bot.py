@@ -138,46 +138,34 @@ class SignalBot:
             is done."""
         return self._pipeline.handlers
 
-    def register(  # noqa: PLR0913 -- the filters are keyword only
+    def register(
         self,
         handler: AnyHandler,
         *,
         contacts: list[str] | bool = True,
         groups: list[str] | bool = True,
         f: Callable[[ReceivedMessage], bool] | None = None,
-        exclusive: bool = False,
-        priority: int = 0,
+        priority: int | None = None,
     ) -> None:
         """Register a handler with optional contact/group filters.
 
         Every handler whose filters and trigger decorator (e.g.
-        [`text_triggered`][signalbot.handlers.text_triggered]) match a message runs.
-        Exclusive handlers are the exception: of the exclusive handlers that match a
-        message, only the one with the highest `priority` runs, the first registered
-        one if several share it. Use them for commands that shouldn't also trigger a
-        catch-all handler, and register the catch-all as exclusive with the lowest
-        priority so it only runs when no other exclusive handler matched. Handlers
-        that aren't exclusive still run alongside the selected exclusive handler.
+        [`text_triggered`][signalbot.handlers.text_triggered]) match a message runs,
+        except that of the matching handlers registered with a `priority`, only the
+        highest one runs.
 
         Args:
             handler: Handler instance to register.
             contacts: Allowed contacts or True for all.
             groups: Allowed groups or True for all.
             f: Optional function to further filter messages.
-            exclusive: Whether at most one exclusive handler runs per message.
-            priority: Which exclusive handler runs when several match, the highest
-                wins. Only valid with `exclusive=True`.
-
-        Raises:
-            ValueError: If `priority` is set on a handler that isn't exclusive.
+            priority: Makes the handler exclusive: of the exclusive handlers that
+                match a message, only the one with the highest priority runs, the
+                first registered one on ties. None runs the handler whenever it
+                matches.
         """
         self._pipeline.register(
-            handler,
-            contacts=contacts,
-            groups=groups,
-            f=f,
-            exclusive=exclusive,
-            priority=priority,
+            handler, contacts=contacts, groups=groups, f=f, priority=priority
         )
 
     async def _async_init(self) -> None:

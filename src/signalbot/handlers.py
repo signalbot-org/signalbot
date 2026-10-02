@@ -24,20 +24,6 @@ MessagePredicate: TypeAlias = Callable[[ReceivedMessage], bool]
 _TRIGGER_ATTR = "_signalbot_trigger"
 
 
-def _register_trigger(wrapper: Callable[..., Any], predicate: MessagePredicate) -> None:
-    """Records `predicate` as the trigger of `wrapper`. When trigger decorators are
-    stacked, `wrapper` already carries the inner trigger, and both must match."""
-    inner: MessagePredicate | None = getattr(wrapper, _TRIGGER_ATTR, None)
-    if inner is None:
-        setattr(wrapper, _TRIGGER_ATTR, predicate)
-    else:
-        setattr(
-            wrapper,
-            _TRIGGER_ATTR,
-            lambda message: predicate(message) and inner(message),
-        )
-
-
 def _message_trigger(handler: object, method_name: str) -> MessagePredicate | None:
     """The trigger of `handler`'s `method_name`, None if it isn't decorated with a
     trigger decorator."""
@@ -56,6 +42,42 @@ if TYPE_CHECKING:
     )
 
 
+def _trigger_decorator(
+    name: str,
+    context_type: type[DataMessageContext | ReactionContext],
+    handler_method: str,
+    matches: MessagePredicate,
+) -> Callable[
+    [Callable[P, CoroutineType[Any, Any, T]]],
+    Callable[P, CoroutineType[Any, Any, T | None]],
+]:
+    """Builds the trigger decorator `name`, which only calls the decorated
+    `handler_method` when the message `matches`."""
+
+    def decorator(
+        func: Callable[P, CoroutineType[Any, Any, T]],
+    ) -> Callable[P, CoroutineType[Any, Any, T | None]]:
+        @functools.wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T | None:
+            context = args[1]
+            if not isinstance(context, context_type):
+                error_msg = f"{name} decorator can only be used with {handler_method}."
+                raise TypeError(error_msg)
+
+            if not matches(context.message):
+                return None
+            return await func(*args, **kwargs)
+
+        # When trigger decorators are stacked, `functools.wraps` copied the inner
+        # trigger onto `wrapper`, and both must match
+        inner: MessagePredicate | None = getattr(wrapper, _TRIGGER_ATTR, None)
+        trigger = matches if inner is None else lambda m: matches(m) and inner(m)
+        setattr(wrapper, _TRIGGER_ATTR, trigger)
+        return wrapper
+
+    return decorator
+
+
 def regex_triggered(
     *by: str | re.Pattern[str],
 ) -> Callable[
@@ -69,7 +91,6 @@ def regex_triggered(
         *by: A variable number of strings or compiled regex patterns to match the
             message text against.
     """
-
     patterns = [re.compile(pattern) for pattern in by]
 
     def matches(message: ReceivedMessage) -> bool:
@@ -78,27 +99,12 @@ def regex_triggered(
         text = message.text
         return any(pattern.search(text) for pattern in patterns)
 
-    def decorator_regex_triggered(
-        func: Callable[P, CoroutineType[Any, Any, T]],
-    ) -> Callable[P, CoroutineType[Any, Any, T | None]]:
-        @functools.wraps(func)
-        async def wrapper_regex_triggered(
-            *args: P.args, **kwargs: P.kwargs
-        ) -> T | None:
-            context = args[1]
-            if not isinstance(context, DataMessageContext):
-                error_msg = "regex_triggered decorator can only be used with "
-                error_msg += "DataMessageHandler.handle_data_message."
-                raise TypeError(error_msg)
-
-            if not matches(context.message):
-                return None
-            return await func(*args, **kwargs)
-
-        _register_trigger(wrapper_regex_triggered, matches)
-        return wrapper_regex_triggered
-
-    return decorator_regex_triggered
+    return _trigger_decorator(
+        "regex_triggered",
+        DataMessageContext,
+        "DataMessageHandler.handle_data_message",
+        matches,
+    )
 
 
 def text_triggered(
@@ -114,7 +120,6 @@ def text_triggered(
         *by: A variable number of strings to match the message text against.
         case_sensitive: Whether the matching should be case sensitive.
     """
-
     by_words = frozenset(by if case_sensitive else (t.lower() for t in by))
 
     def matches(message: ReceivedMessage) -> bool:
@@ -123,25 +128,12 @@ def text_triggered(
         text = message.text if case_sensitive else message.text.lower()
         return text in by_words
 
-    def decorator_triggered(
-        func: Callable[P, CoroutineType[Any, Any, T]],
-    ) -> Callable[P, CoroutineType[Any, Any, T | None]]:
-        @functools.wraps(func)
-        async def wrapper_triggered(*args: P.args, **kwargs: P.kwargs) -> T | None:
-            context = args[1]
-            if not isinstance(context, DataMessageContext):
-                error_msg = "text_triggered decorator can only be used with "
-                error_msg += "DataMessageHandler.handle_data_message."
-                raise TypeError(error_msg)
-
-            if not matches(context.message):
-                return None
-            return await func(*args, **kwargs)
-
-        _register_trigger(wrapper_triggered, matches)
-        return wrapper_triggered
-
-    return decorator_triggered
+    return _trigger_decorator(
+        "text_triggered",
+        DataMessageContext,
+        "DataMessageHandler.handle_data_message",
+        matches,
+    )
 
 
 def reaction_triggered(
@@ -159,28 +151,12 @@ def reaction_triggered(
     def matches(message: ReceivedMessage) -> bool:
         return isinstance(message, Reaction) and (not by or message.emoji in by)
 
-    def decorator_reaction_triggered(
-        func: Callable[P, CoroutineType[Any, Any, T]],
-    ) -> Callable[P, CoroutineType[Any, Any, T | None]]:
-        @functools.wraps(func)
-        async def wrapper_reaction_triggered(
-            *args: P.args, **kwargs: P.kwargs
-        ) -> T | None:
-            context = args[1]
-            if not isinstance(context, ReactionContext):
-                error_msg = "reaction_triggered decorator can only be used with "
-                error_msg += "ReactionHandler.handle_reaction."
-                raise TypeError(error_msg)
-
-            if not matches(context.message):
-                return None
-            return await func(*args, **kwargs)
-
-        _register_trigger(wrapper_reaction_triggered, matches)
-
-        return wrapper_reaction_triggered
-
-    return decorator_reaction_triggered
+    return _trigger_decorator(
+        "reaction_triggered",
+        ReactionContext,
+        "ReactionHandler.handle_reaction",
+        matches,
+    )
 
 
 class DataMessageHandler(ABC):

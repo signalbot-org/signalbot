@@ -307,8 +307,8 @@ class TestExclusiveCommandsWithFallback(ChatTestCase):
     @pytest.fixture(autouse=True)
     def setup_fixture(self):
         self.setup()
-        self.signal_bot.register(PingCommand(), exclusive=True, priority=1)
-        self.signal_bot.register(EchoFallback(), exclusive=True)
+        self.signal_bot.register(PingCommand(), priority=1)
+        self.signal_bot.register(EchoFallback(), priority=0)
 
     @mock_chat("ping")
     async def test_command_does_not_trigger_the_fallback(self, mocker: MockerFixture):

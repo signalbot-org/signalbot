@@ -75,12 +75,13 @@ It names every file that needs to change, in order.
 5. `src/signalbot/handlers.py` — one `*Handler` ABC per message kind (`DataMessageHandler`,
    `ReactionHandler`, ...) with a single abstract `handle_xxx(self, context)` method that bot authors
    subclass, plus trigger decorators (`text_triggered`, `regex_triggered`, `reaction_triggered`) that filter
-   before calling through. Each decorator also records its message predicate (`_TRIGGERS`), which the
-   pipeline checks at dispatch time.
+   before calling through. Each decorator also stores its message predicate on the wrapper
+   (`_TRIGGER_ATTR`), which the pipeline checks at dispatch time.
 6. `src/signalbot/_pipeline.py` — `_MESSAGE_DISPATCH` is the single map tying a parsed message type to
    `(HandlerABC, ContextClass, "handle_method_name")`. Nothing reaches a handler without an entry here.
    `_dispatch_to_handlers` only queues handlers of the right role whose filters and trigger match; of the
-   matching `exclusive=True` handlers only the highest `priority` one (then first registered) is queued.
+   matching handlers registered with a `priority` (exclusive) only the highest one (then first
+   registered) is queued, as the handler method bound to its context.
 7. `src/signalbot/bot.py` (`SignalBot`) — top-level object bot authors construct. `_bot_init.py` builds the
    shared `SignalAPI` client, event loop, scheduler (APScheduler), and storage backend;
    `SignalBot._init_actions()` wires up the `*Actions` instances and the `MessagePipeline`.

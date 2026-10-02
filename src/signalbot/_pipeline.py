@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import itertools
 import time
 from dataclasses import dataclass, replace
@@ -42,7 +43,7 @@ from signalbot.reactions import Reaction
 
 if TYPE_CHECKING:
     import logging
-    from collections.abc import Callable
+    from collections.abc import Awaitable, Callable
 
     from signalbot._client import SignalAPI
     from signalbot.bot import SignalBot
@@ -65,8 +66,7 @@ class _Registration:
     contacts: list[str] | bool
     groups: list[str] | bool  # names or ids as registered, ids once resolved
     f: Callable[[ReceivedMessage], bool] | None
-    exclusive: bool
-    priority: int
+    priority: int | None  # None if the handler isn't exclusive
 
 
 class MessagePipeline:
@@ -89,29 +89,24 @@ class MessagePipeline:
         self._handlers_to_register: list[_Registration] = []  # populated by .register()
         self._handlers: list[_Registration] = []  # populated by .resolve_handlers()
 
-        self._q: asyncio.Queue[tuple[AnyHandler, ReceivedMessage, float]] = (
-            asyncio.Queue()
-        )
+        # (handler, its method bound to the message's context, time queued)
+        self._q: asyncio.Queue[
+            tuple[AnyHandler, Callable[[], Awaitable[None]], float]
+        ] = asyncio.Queue()
         self._produce_tasks: set[asyncio.Task] = set()
         self._consume_tasks: set[asyncio.Task] = set()
 
-    def register(  # noqa: PLR0913 -- the filters are keyword only
+    def register(
         self,
         handler: AnyHandler,
         *,
         contacts: list[str] | bool = True,
         groups: list[str] | bool = True,
         f: Callable[[ReceivedMessage], bool] | None = None,
-        exclusive: bool = False,
-        priority: int = 0,
+        priority: int | None = None,
     ) -> None:
-        if priority != 0 and not exclusive:
-            error_msg = "priority only applies to exclusive handlers, "
-            error_msg += "register the handler with exclusive=True"
-            raise ValueError(error_msg)
-
         self._handlers_to_register.append(
-            _Registration(handler, contacts, groups, f, exclusive, priority)
+            _Registration(handler, contacts, groups, f, priority)
         )
 
     @property
@@ -291,16 +286,16 @@ class MessagePipeline:
             return False
 
     async def _dispatch_to_handlers(self, message: ReceivedMessage) -> None:
-        """Queues every handler that matches `message`. Among the matching exclusive
-        handlers only the one with the highest priority is queued, the first
-        registered one if several share it."""
+        """Queues every handler that matches `message`. Of the matching exclusive
+        handlers (registered with a `priority`) only the one with the highest
+        priority is queued, the first registered one if several share it."""
         dispatch = _MESSAGE_DISPATCH.get(type(message))
         if dispatch is None:
             self._logger.warning(
                 "[Bot] Unknown message type: %s, skipping dispatch", type(message)
             )
             return
-        handler_type, _, method_name = dispatch
+        handler_type, context_type, method_name = dispatch
 
         matching = [
             r
@@ -311,15 +306,14 @@ class MessagePipeline:
             )
             and self._should_react_for_trigger(r.handler, message, method_name, r.f)
         ]
+        exclusive = [(p, r) for r in matching if (p := r.priority) is not None]
         # `max` keeps the first registered one on ties
-        winner = max(
-            (r for r in matching if r.exclusive),
-            key=lambda r: r.priority,
-            default=None,
-        )
+        _, winner = max(exclusive, key=lambda item: item[0], default=(None, None))
         for r in matching:
-            if not r.exclusive or r is winner:
-                await self._q.put((r.handler, message, time.perf_counter()))
+            if r.priority is None or r is winner:
+                method = getattr(r.handler, method_name)
+                job = functools.partial(method, context_type(self._bot, message))
+                await self._q.put((r.handler, job, time.perf_counter()))
 
     async def _consume(self, name: int) -> None:
         self._logger.info("[Bot] Consumer #%s started", name)
@@ -332,30 +326,15 @@ class MessagePipeline:
                 # regardless of what it raises.
                 self._logger.debug("[Bot] Consumer #%s recovered, resuming", name)
 
-    async def _invoke_handler(
-        self, handler: AnyHandler, message: ReceivedMessage
-    ) -> None:
-        dispatch = _MESSAGE_DISPATCH.get(type(message))
-        if dispatch is None:
-            error_msg = f"[Bot] Unknown message type: {type(message)}, "
-            error_msg += "skipping handler execution"
-            self._logger.warning(error_msg)
-            return
-
-        handler_type, context_type, method_name = dispatch
-        if isinstance(handler, handler_type):
-            method = getattr(handler, method_name)
-            await method(context_type(self._bot, message))
-
     async def _consume_new_item(self, name: int) -> None:
-        handler, message, t = await self._q.get()
+        handler, job, t = await self._q.get()
         now = time.perf_counter()
         self._logger.info(
             "[Bot] Consumer #%s got new job in %0.5f seconds", name, now - t
         )
 
         try:
-            await self._invoke_handler(handler, message)
+            await job()
         except Exception:
             self._logger.exception("[%s]", handler.__class__.__name__)
             raise

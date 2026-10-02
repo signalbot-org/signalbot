@@ -47,36 +47,24 @@ Registration is the opening step of the walk-through below (steps 1-2).
 
 ### Exclusive handlers
 
-By default every matching handler runs, so a handler without a trigger sees every message, also
-the ones another handler already answered. When a message should be handled by one handler only,
-register the handlers as exclusive: of the exclusive handlers that match a message, only the one
-with the highest `priority` runs, the first registered one if several share it. Handlers that
-aren't exclusive keep running as usual next to it.
-
-This makes a catch-all handler that only runs when no command matched:
+By default every matching handler runs, so a handler without a trigger also sees the messages
+another handler already answered. Registering handlers with a `priority` makes them exclusive: of
+the exclusive handlers that match a message, only the one with the highest priority runs, the first
+registered one on ties. Handlers without a priority still run alongside it.
 
 ```python
-bot.register(PingHandler(), exclusive=True, priority=1)  # @text_triggered("!ping")
-bot.register(HelpHandler(), exclusive=True, priority=1)  # @text_triggered("!help")
-bot.register(EchoHandler(), exclusive=True)  # no trigger, priority 0: everything else
+bot.register(LogHandler())  # no trigger, not exclusive: every message
+bot.register(PingHandler(), priority=1)  # @text_triggered("!ping")
+bot.register(EchoHandler(), priority=0)  # no trigger: everything that isn't !ping
 ```
 
-Exclusivity only limits the exclusive handlers among themselves. Handlers that aren't exclusive
-also run when an exclusive one matches the same message. Add a handler that logs every message:
+Here `!ping` runs `LogHandler` and `PingHandler`, and any other message runs `LogHandler` and
+`EchoHandler`. The consumers run the selected handlers concurrently, so don't rely on one finishing
+before another starts.
 
-```python
-bot.register(LogHandler())  # not exclusive, no trigger
-bot.register(PingHandler(), exclusive=True, priority=1)  # @text_triggered("!ping")
-bot.register(EchoHandler(), exclusive=True)  # no trigger, priority 0
-```
-
-Then `!ping` runs `LogHandler` and `PingHandler`, and any other message runs `LogHandler` and
-`EchoHandler`. The selected handlers are queued in registration order, but the consumers run them
-concurrently, so don't rely on one finishing before another starts.
-
-Exclusivity is decided per message before any handler runs, so it only takes into account the
-contact and group filters, the `f` filter and the trigger decorators. A handler that matches but
-then decides inside `handle_xxx` not to do anything still counts as having handled the message.
+Exclusivity is decided before any handler runs, from the contact and group filters, the `f` filter
+and the trigger decorators. A handler that matches but then does nothing in `handle_xxx` still
+counts as having handled the message.
 
 ## Following one message end to end
 
