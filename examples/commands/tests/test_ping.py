@@ -11,9 +11,6 @@ class TestPingChatTest(ChatTestCase):
         self.setup()
         self.signal_bot.register(PingCommand())
 
-    @pytest.mark.filterwarnings(
-        "ignore:There is no current event loop:DeprecationWarning"
-    )
     @mock_chat("ping")
     async def test_ping(self, mocker: MockerFixture, *args: object, **kwargs: object):
         replies = self.send_mock

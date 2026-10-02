@@ -256,7 +256,6 @@ class SchnickSchnackSchnuckCommand(DataMessageHandler):
             await context.send(SendMessage(text="schnuck"))
 
 
-@pytest.mark.filterwarnings("ignore:There is no current event loop:DeprecationWarning")
 class TestSchnickSchnackSchnuckCommand(ChatTestCase):
     @pytest.fixture(autouse=True)
     def setup_fixture(self):

@@ -1,5 +1,6 @@
 import base64
 import json
+import warnings
 
 import aiohttp
 import pytest
@@ -433,13 +434,14 @@ async def test_edit_message(signal_api: SignalAPI):
     assert message.text == "Uhrzeit!"
 
 
-@pytest.mark.filterwarnings("error::DeprecationWarning")
 async def test_edit_message_parsing_does_not_warn(signal_api: SignalAPI):
     # Building the EditMessage copies every DataMessage field, including the
     # deprecated `source`, which must not warn
-    message = await parse(signal_api, RAW_EDIT_MESSAGE)
-    assert isinstance(message, EditMessage)
-    assert dict(message)["source"] is not None
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        message = await parse(signal_api, RAW_EDIT_MESSAGE)
+        assert isinstance(message, EditMessage)
+        assert dict(message)["source"] is not None
 
 
 async def test_edit_message_private_conversation(signal_api: SignalAPI):
