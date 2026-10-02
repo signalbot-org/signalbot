@@ -36,8 +36,17 @@ uv run pytest
 
 ### Extending signalbot
 
-Adding support for a new incoming or outgoing Signal message type? See the
-[Extending signalbot](06_extending.md) guide.
+Adding support for a new Signal message type touches a small, predictable set of files. Start with
+the [Architecture](01_architecture.md) page to see how the layers fit together, then follow the
+checklist for the direction you are adding:
+
+- [New incoming messages](02_incoming_messages.md): a message pushed by signal-cli-rest-api that
+  signalbot parses and dispatches to a handler.
+- [New outgoing messages](03_outgoing_messages.md): a bot author call that turns into an HTTP
+  request against a signal-cli-rest-api endpoint.
+
+Supporting a newer signal-cli-rest-api release? See
+[Upgrading to a new signal-cli-rest-api version](04_new_signal_cli_rest_api.md).
 
 ### Serving the documentation locally
 

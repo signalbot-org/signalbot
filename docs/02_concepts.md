@@ -2,21 +2,22 @@
 title: How it works
 ---
 
-Signalbot moves messages in two directions: **incoming** messages arrive over a websocket and are
-routed to your code, **outgoing** messages are sent by your code through an HTTP API. This page
-shows how the pieces fit together.
+Signalbot moves messages in two directions: **incoming** messages arrive from
+`signal-cli-rest-api` and are routed to the handlers you registered, **outgoing** messages are sent
+by your code back through `signal-cli-rest-api`. This page shows how the pieces fit together from
+the point of view of a bot author. The internals are described in
+[Architecture](contributing/01_architecture.md).
 
-## Architecture
+## Message flow
 
 ### Incoming
 
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}}}%%
 flowchart LR
-    WS(["signal-cli-rest-api<br/>websocket"]) --> Parse["parse()"]
-    Parse --> Queue[["dispatch queue"]]
-    Queue --> Handler["Handler.handle_xxx()"]
-    Handler --> Context(["Context"])
+    API(["signal-cli-rest-api"]) --> Bot["SignalBot"]
+    Bot --> Match{"filters and<br/>trigger match?"}
+    Match --> Handler["Handler.handle_xxx(context)"]
 ```
 
 ### Outgoing
@@ -24,26 +25,42 @@ flowchart LR
 ```mermaid
 %%{init: {"flowchart": {"useMaxWidth": false}}}%%
 flowchart LR
-    Call(["context.send(), .react(), ..."]) --> Actions["*Actions"]
-    Actions --> Client["HTTP client"]
-    Client --> HTTP(["signal-cli-rest-api<br/>HTTP endpoint"])
+    Call(["context.send(), .react(), ...<br/>bot.messages.send(), ..."]) --> Bot["SignalBot"]
+    Bot --> API(["signal-cli-rest-api"])
 ```
 
-- **Incoming**: The internal pipeline reads the websocket, an internal `parse()` turns the raw JSON into a
-  [`ReceivedMessage`][signalbot.messages.ReceivedMessage], dispatches it to the matching
-  `Handler` and [`Context`][signalbot.context.Context] subclass before
-  your `handle_xxx` method runs.
-- **Outgoing**: calling a method on `context` (or directly on `bot.messages` / `bot.reactions` /
-  ...) resolves the recipient, builds a request object, and sends it through an internal HTTP client to `signal-cli-rest-api`.
+- **Incoming**: every message the bot's account receives is turned into a typed message object
+  (a [`ReceivedMessage`][signalbot.messages.ReceivedMessage]), checked against the filters and
+  trigger of each registered handler, and passed to every matching handler wrapped in a
+  [`Context`][signalbot.context.Context].
+- **Outgoing**: the methods on `context` (`context.send(...)`, `context.react(...)`, ...) answer
+  the message the handler received, so the recipient is filled in for you. The same actions are
+  available on the bot itself (`bot.messages`, `bot.reactions`, `bot.polls`, ...) when you need to
+  pass the recipient explicitly, e.g. from a scheduled job.
+
+## Message types
+
+Each kind of incoming message has its own handler base class. Subclass it, implement its handler
+method, and that method receives the matching context:
+
+| Message                                                                                                      | Handler                                                         | Context                                                        | Handler method         |
+| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- | -------------------------------------------------------------- | ---------------------- |
+| [`DataMessage`][signalbot.messages.DataMessage], [`EditMessage`][signalbot.messages.EditMessage] | [`DataMessageHandler`][signalbot.handlers.DataMessageHandler]   | [`DataMessageContext`][signalbot.context.DataMessageContext]   | `handle_data_message`  |
+| [`Reaction`][signalbot.reactions.Reaction]                                                                   | [`ReactionHandler`][signalbot.handlers.ReactionHandler]         | [`ReactionContext`][signalbot.context.ReactionContext]         | `handle_reaction`      |
+| [`RemoteDelete`][signalbot.messages.RemoteDelete]                                                            | [`RemoteDeleteHandler`][signalbot.handlers.RemoteDeleteHandler] | [`RemoteDeleteContext`][signalbot.context.RemoteDeleteContext] | `handle_remote_delete` |
+| [`TypingMessage`][signalbot.messages.TypingMessage]                                                          | [`TypingHandler`][signalbot.handlers.TypingHandler]             | [`TypingContext`][signalbot.context.TypingContext]             | `handle_typing`        |
+| [`GroupUpdate`][signalbot.groups.GroupUpdate]                                                                | [`GroupUpdateHandler`][signalbot.handlers.GroupUpdateHandler]   | [`GroupUpdateContext`][signalbot.context.GroupUpdateContext]   | `handle_group_update`  |
+
+A [`ReadyHandler`][signalbot.handlers.ReadyHandler] doesn't handle messages: its `handle_ready`
+runs once, after the bot has connected and before it starts processing incoming messages.
 
 ## Registration
 
-Before any of this runs, handlers need to be registered with the bot — typically once at startup,
+Handlers need to be registered with the bot — typically once at startup,
 e.g. `bot.register(PingHandler())`. The `bot.register()` just stores the handler and its filters;
 nothing is invoked yet. From then on, every incoming message is checked against each registered
 handler's filters and trigger decorator (`@text_triggered`, `@regex_triggered`,
 `@reaction_triggered`), and every handler that matches is invoked with a fresh `Context`.
-Registration is the opening step of the walk-through below (steps 1-2).
 
 ### Exclusive handlers
 
@@ -53,18 +70,15 @@ the exclusive handlers that match a message, only the one with the highest prior
 registered one on ties. Handlers without a priority still run alongside it.
 
 ```python
-bot.register(LogHandler())  # no trigger, not exclusive: every message
-bot.register(PingHandler(), priority=1)  # @text_triggered("!ping")
-bot.register(EchoHandler(), priority=0)  # no trigger: everything that isn't !ping
+# not exclusive: every message
+bot.register(Handler1())
+
+# exclusive: if Handler2 and Handler3 match, only Handler2 runs
+bot.register(Handler2(), priority=1)
+
+# exclusive: only runs if Handler2 does not match
+bot.register(Handler3(), priority=0)
 ```
-
-Here `!ping` runs `LogHandler` and `PingHandler`, and any other message runs `LogHandler` and
-`EchoHandler`. The consumers run the selected handlers concurrently, so don't rely on one finishing
-before another starts.
-
-Exclusivity is decided before any handler runs, from the contact and group filters, the `f` filter
-and the trigger decorators. A handler that matches but then does nothing in `handle_xxx` still
-counts as having handled the message.
 
 See the [handler priorities example](examples/05_priority_bot.md) for a complete bot.
 
@@ -85,25 +99,19 @@ sequenceDiagram
     participant Author as Bot author code
     participant Bot as SignalBot
     participant API as signal-cli-rest-api
-    participant Pipeline as MessagePipeline
     participant Handler as PingHandler
-    participant Context as DataMessageContext
 
     Author->>Bot: bot.register(PingHandler())
-    Bot->>Pipeline: store handler + filters
-    Note over Pipeline: bot.start() → resolve_handlers()
+    Author->>Bot: bot.start()
 
-    API-->>Pipeline: websocket push: raw "!ping" envelope
-    Pipeline->>Pipeline: parse() → DataMessage
-    Pipeline->>Pipeline: filters and @text_triggered("!ping") match? dispatch lookup
-    Pipeline->>Handler: handle_data_message(DataMessageContext(bot, message))
-    Handler->>Context: context.send(SendMessage(text="pong"))
-    Context->>Bot: bot.messages.send(message, recipient)
-    Bot-->>API: HTTP POST /v2/send
+    API-->>Bot: "!ping" received
+    Bot->>Bot: filters and @text_triggered("!ping") match?
+    Bot->>Handler: handle_data_message(context)
+    Handler->>Bot: context.send(SendMessage(text="pong"))
+    Bot-->>API: send "pong"
     API-->>Author: "pong" delivered to the chat
 ```
 
-Every incoming message type has its own `Handler`/`Context` pair and dispatch entry (see the table
-in [Extending signalbot](06_extending.md#new-incoming-message)) — this walk-through uses
-`DataMessage` because it's the most common case, but reactions, typing indicators, remote deletes,
-and group updates all follow the same shape.
+This walk-through uses a `DataMessage` because it's the most common case, but reactions, typing
+indicators, remote deletes, and group updates all follow the same shape with their own handler and
+context from the [table above](#message-types).
