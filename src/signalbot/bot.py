@@ -145,16 +145,28 @@ class SignalBot:
         contacts: list[str] | bool = True,
         groups: list[str] | bool = True,
         f: Callable[[ReceivedMessage], bool] | None = None,
+        priority: int | None = None,
     ) -> None:
         """Register a handler with optional contact/group filters.
+
+        Every handler whose filters and trigger decorator (e.g.
+        [`text_triggered`][signalbot.handlers.text_triggered]) match a message runs,
+        except that of the matching handlers registered with a `priority`, only the
+        highest one runs.
 
         Args:
             handler: Handler instance to register.
             contacts: Allowed contacts or True for all.
             groups: Allowed groups or True for all.
             f: Optional function to further filter messages.
+            priority: Makes the handler exclusive: of the exclusive handlers that
+                match a message, only the one with the highest priority runs, the
+                first registered one on ties. None runs the handler whenever it
+                matches.
         """
-        self._pipeline.register(handler, contacts=contacts, groups=groups, f=f)
+        self._pipeline.register(
+            handler, contacts=contacts, groups=groups, f=f, priority=priority
+        )
 
     async def _async_init(self) -> None:
         """Connect to signal-cli-rest-api and get handlers ready, without starting

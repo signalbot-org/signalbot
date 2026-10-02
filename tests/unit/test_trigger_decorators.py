@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING, cast
 import pytest
 
 from signalbot.context import DataMessageContext, ReactionContext
-from signalbot.handlers import reaction_triggered, regex_triggered, text_triggered
+from signalbot.handlers import (
+    _message_trigger,
+    reaction_triggered,
+    regex_triggered,
+    text_triggered,
+)
 from signalbot.reactions import Reaction
 from tests.unit.conftest import PRIVATE_NUMBER, make_data_message
 
@@ -125,3 +130,37 @@ class TestReactionTriggeredGuards:
         result = await handler.handle_reaction(context)
 
         assert result == "called"
+
+
+class TestDispatchTriggers:
+    """The decorators record their trigger so the pipeline can check it before
+    queuing the handler."""
+
+    def test_text_trigger(self):
+        trigger = _message_trigger(_TextHandler(), "handle_data_message")
+        assert trigger is not None
+        assert trigger(_data_message("HELLO"))
+        assert not trigger(_data_message("hello there"))
+        assert not trigger(_data_message(None))
+        assert not trigger(_reaction("👍"))
+
+    def test_regex_trigger(self):
+        trigger = _message_trigger(_RegexHandler(), "handle_data_message")
+        assert trigger is not None
+        assert trigger(_data_message("call 112"))
+        assert not trigger(_data_message("no digits"))
+
+    def test_reaction_trigger(self):
+        trigger = _message_trigger(_ReactionHandler(), "handle_reaction")
+        assert trigger is not None
+        assert trigger(_reaction("👍"))
+        assert not trigger(_reaction("👎"))
+        assert not trigger(_data_message("👍"))
+
+    def test_undecorated_methods_have_no_trigger(self):
+        class Plain:
+            async def handle_data_message(self, context: DataMessageContext) -> None:
+                pass
+
+        assert _message_trigger(Plain(), "handle_data_message") is None
+        assert _message_trigger(Plain(), "handle_reaction") is None

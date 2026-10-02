@@ -18,28 +18,9 @@ class EditMessage(DataMessage):
     async def from_data_message(
         cls, data_message: DataMessage, target_sent_timestamp: int
     ) -> EditMessage:
-        return cls(
-            server_delivered_timestamp=data_message.server_delivered_timestamp,
-            server_received_timestamp=data_message.server_received_timestamp,
-            source_device=data_message.source_device,
-            source=data_message.source,
-            source_name=data_message.source_name,
-            source_number=data_message.source_number,
-            source_uuid=data_message.source_uuid,
-            group_info=data_message.group_info,
-            attachments=data_message.attachments,
-            expires_in_seconds=data_message.expires_in_seconds,
-            mentions=data_message.mentions,
-            text=data_message.text,
-            previews=data_message.previews,
-            base64_previews=data_message.base64_previews,
-            quote=data_message.quote,
-            sticker=data_message.sticker,
-            text_styles=data_message.text_styles,
-            timestamp=data_message.timestamp,
-            view_once=data_message.view_once,
-            target_sent_timestamp=target_sent_timestamp,
-        )
+        # Iterating the model reads the fields without going through their getters,
+        # so copying the deprecated `source` field doesn't warn
+        return cls(**dict(data_message), target_sent_timestamp=target_sent_timestamp)
 
     @classmethod
     async def from_message_envelope(
