@@ -66,6 +66,8 @@ Exclusivity is decided before any handler runs, from the contact and group filte
 and the trigger decorators. A handler that matches but then does nothing in `handle_xxx` still
 counts as having handled the message.
 
+See the [handler priorities example](examples/05_priority_bot.md) for a complete bot.
+
 ## Following one message end to end
 
 Take a bot with a single handler:
