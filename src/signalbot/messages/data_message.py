@@ -5,7 +5,6 @@ from copy import deepcopy
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from signalbot._generated import TextMode
 from signalbot._utils.generated_conversion import from_generated, from_generated_list
 from signalbot._utils.source import parse_source_from_envelope
 from signalbot.attachments import Attachment
@@ -200,10 +199,6 @@ class DataMessage(BaseMessageWithGroup):
                     thumbnail=preview.base64_thumbnail,
                 )
 
-        text_style = None
-        if copy.text_styles is not None and len(copy.text_styles) > 0:
-            text_style = TextMode(copy.text_styles[0].style)
-
         return SendMessage(
             base64_attachments=base_64_attachments,
             edit_timestamp=None,
@@ -218,6 +213,7 @@ class DataMessage(BaseMessageWithGroup):
             quote_text=copy.quote.text if copy.quote is not None else None,
             quote_timestamp=copy.quote.id if copy.quote is not None else None,
             # sticker=copy.sticker, # Not clear how to send stickers yet
-            text_mode=text_style,
+            # text_styles can't be copied yet, signal-cli-rest-api only takes styles
+            # as markers in the text
             view_once=copy.view_once,
         )
