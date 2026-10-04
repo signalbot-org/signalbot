@@ -11,7 +11,7 @@ class UpdateContact(BaseModel):
     expiration_in_seconds: int | None = Field(
         default=None,
         description="The new disappearing message timer in seconds. "
-        "`None` leaves it unchanged, `0` disables it.",
+        "`None` leaves it unchanged, `-1` disables it.",
     )
     name: str | None = Field(default=None, description="The new name of the contact.")
 
