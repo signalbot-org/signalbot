@@ -12,7 +12,7 @@ from signalbot.groups.group_permissions import GroupPermissions
 class UpdateGroup(BaseModel):
     """The fields to change on a group. If a field is `None`, it is left unchanged."""
 
-    avatar: PydanticPath | str | None = Field(
+    avatar: str | PydanticPath | None = Field(
         default=None,
         description="The new avatar of the group. This can be a Path or a base64 "
         "encoded string of the image content.",

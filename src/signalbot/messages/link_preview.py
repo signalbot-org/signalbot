@@ -27,7 +27,7 @@ class LinkPreview(BaseModel):
     description: str = Field(description="The description of the link preview.")
     title: str = Field(description="The title of the link preview.")
     url: str = Field(description="The URL of the link preview.")
-    thumbnail: PydanticPath | str = Field(
+    thumbnail: str | PydanticPath = Field(
         description="The thumbnail of the link preview. This can be a Path or a "
         "base64 encoded string of the image content."
     )
