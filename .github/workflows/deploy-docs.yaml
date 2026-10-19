@@ -1,18 +1,36 @@
 name: Deploy docs to GitHub pages
 
 on:
-  release:
-    types: [published]
+  # Called by the release workflow
+  workflow_call:
+
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to deploy the docs of, e.g. v2.1.2
+        required: true
+        type: string
 
 jobs:
   deploy:
     runs-on: ubuntu-24.04
     permissions:
       contents: write
+    env:
+      # The tagged release when called by the release workflow, the given tag when run by hand
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
     steps:
+      - name: Check the release tag
+        run: |
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9] ]]; then
+            echo "::error::${RELEASE_TAG} is not a release tag"
+            exit 1
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v6
         with:
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Install uv
@@ -27,4 +45,4 @@ jobs:
           git config --global user.email "mike.deploy@email.com"
 
       - name: Build and deploy a new version with mike
-        run: uv run mike deploy --push --update-aliases $(uv version --short) latest
+        run: uv run mike deploy --push --update-aliases "${RELEASE_TAG#v}" latest
