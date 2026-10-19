@@ -117,3 +117,10 @@ jobs:
         run: |-
           gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
             --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/notes.md"
+
+  deploy-docs:
+    name: Deploy docs
+    needs: release
+    permissions:
+      contents: write
+    uses: ./.github/workflows/deploy-docs.yaml

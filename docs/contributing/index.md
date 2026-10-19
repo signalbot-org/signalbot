@@ -48,6 +48,10 @@ checklist for the direction you are adding:
 Supporting a newer signal-cli-rest-api release? See
 [Upgrading to a new signal-cli-rest-api version](04_new_signal_cli_rest_api.md).
 
+### Releasing
+
+Maintainers publish a new version by pushing a tag, see [Releasing](05_releasing.md).
+
 ### Serving the documentation locally
 
 1. Install the docs dependencies
