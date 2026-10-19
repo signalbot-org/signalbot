@@ -1,6 +1,6 @@
 [project]
 name = "signalbot"
-version = "2.1.1.dev0"
+version = "2.1.1"
 description = "Framework to create your own Signal bots"
 readme = "README.md"
 requires-python = ">=3.11"
