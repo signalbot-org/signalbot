@@ -6,6 +6,20 @@ resolution-markers = [
     "python_full_version < '3.14'",
 ]
 
+[manifest]
+build-constraints = [
+    { name = "dunamai", specifier = "==1.26.3" },
+    { name = "hatchling", specifier = "==1.32.4" },
+    { name = "jinja2", specifier = "==3.1.6" },
+    { name = "markupsafe", specifier = "==3.0.4" },
+    { name = "packaging", specifier = "==26.3" },
+    { name = "pathspec", specifier = "==1.1.1" },
+    { name = "pluggy", specifier = "==1.7.0" },
+    { name = "tomlkit", specifier = "==0.15.2" },
+    { name = "trove-classifiers", specifier = "==2026.9.21.13" },
+    { name = "uv-dynamic-versioning", specifier = "==0.14.1" },
+]
+
 [[package]]
 name = "aiohappyeyeballs"
 version = "2.7.1"
@@ -1558,7 +1572,6 @@ wheels = [
 
 [[package]]
 name = "signalbot"
-version = "2.1.2.dev0"
 source = { editable = "." }
 dependencies = [
     { name = "aiohttp" },
