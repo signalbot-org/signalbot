@@ -7,3 +7,14 @@ updates:
     directory: /
     schedule:
       interval: quarterly
+
+  - package-ecosystem: github-actions
+    directories:
+      - /
+      # composite actions are not picked up from the root directory
+      - /.github/workflows/install-uv
+    schedule:
+      interval: quarterly
+    groups:
+      github-actions:
+        patterns: ['*']
