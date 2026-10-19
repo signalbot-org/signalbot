@@ -9,6 +9,10 @@ updates:
       interval: quarterly
     cooldown:
       default-days: 7
+    groups:
+      python-minor-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
 
   - package-ecosystem: github-actions
     directory: /
