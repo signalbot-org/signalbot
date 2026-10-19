@@ -25,14 +25,14 @@ class EditCommand(DataMessageHandler):
         )
 
 
-class EditNotifierCommand(DataMessageHandler):
+class EditNotifierHandler(DataMessageHandler):
     """`EditMessage` is a `DataMessage` subclass, so edits are dispatched to the
     same `handle_data_message` method as regular messages — check `isinstance`
     to tell them apart.
     """
 
     def help_message(self) -> str:
-        return "Message edited: 📝 Notifies when someone edits a sent message."
+        return "Message edited: 📝 Notifies when someone edits a message."
 
     async def handle_data_message(self, context: DataMessageContext) -> None:
         if not isinstance(context.message, EditMessage):

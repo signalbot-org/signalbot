@@ -4,7 +4,7 @@ from .broadcast import BroadcastCommand
 from .close import CloseCommand
 from .contact import UpdateContactCommand
 from .delete import DeleteCommand, DeleteLocalAttachmentCommand
-from .edit import EditCommand, EditNotifierCommand
+from .edit import EditCommand, EditNotifierHandler
 from .group import UpdateGroupCommand
 from .help import HelpCommand
 from .link_preview import LinkPreviewCommand
@@ -26,7 +26,7 @@ __all__ = [
     "DeleteCommand",
     "DeleteLocalAttachmentCommand",
     "EditCommand",
-    "EditNotifierCommand",
+    "EditNotifierHandler",
     "HelpCommand",
     "LinkPreviewCommand",
     "PingCommand",

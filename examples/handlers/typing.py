@@ -9,6 +9,10 @@ class TypingIndicatorHandler(TypingHandler):
 
     def __init__(self) -> None:
         self.enabled = False
+        self._verb_msg = {
+            TypingAction.STARTED: "started",
+            TypingAction.STOPPED: "stopped",
+        }
 
     def help_message(self) -> str:
         return "Typing indicator received: ⌨️ Notifies when someone starts typing."
@@ -17,9 +21,7 @@ class TypingIndicatorHandler(TypingHandler):
         if not self.enabled:
             return
 
-        if context.message.action != TypingAction.STARTED:
-            return
-
+        verb = self._verb_msg[context.message.action]
         await context.send(
-            SendMessage(text=f"{context.message.source_name} is typing…")
+            SendMessage(text=f"{context.message.source_name} {verb} typing")
         )
