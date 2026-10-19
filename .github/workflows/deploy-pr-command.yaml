@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Create deployment
         id: create_deployment
-        uses: octokit/request-action@v3.x
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
         with:
           route: POST /repos/:repository/deployments
         env:
@@ -29,7 +29,7 @@ jobs:
 
       - name: Set deployment status to in progress
         id: start_deployment
-        uses: octokit/request-action@v3.x
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
         with:
           route: POST /repos/:repository/deployments/:deployment/statuses
           deployment: ${{ fromJson(steps.create_deployment.outputs.data).id }}
@@ -41,7 +41,7 @@ jobs:
           INPUT_REPOSITORY: ${{ github.repository }}
 
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ github.event.client_payload.pull_request.head.sha }}
           fetch-depth: 0
@@ -73,7 +73,7 @@ jobs:
         run: uv publish --index testpypi --token ${{ secrets.API_TOKEN }}
 
       - name: Write comment in Pull Request
-        uses: peter-evans/create-or-update-comment@v5
+        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5.0.0
         with:
           issue-number: ${{ github.event.client_payload.pull_request.number }}
           body: |
@@ -84,7 +84,7 @@ jobs:
 
       - name: Set deployment status to success
         id: successful_deployment
-        uses: octokit/request-action@v3.x
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
         with:
           route: POST /repos/:repository/deployments/:deployment/statuses
           deployment: ${{ fromJson(steps.create_deployment.outputs.data).id }}
@@ -98,7 +98,7 @@ jobs:
 
       - name: Set deployment status to failure
         id: failed_deployment
-        uses: octokit/request-action@v3.x
+        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
         if: failure()
         with:
           route: POST /repos/:repository/deployments/:deployment/statuses
