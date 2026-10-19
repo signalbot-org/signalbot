@@ -1,18 +1,38 @@
 name: Release Package
 
 on:
-  release:
-    types: [published]
+  push:
+    tags: [v*]
 
 jobs:
   ci:
     name: CI
     uses: ./.github/workflows/ci.yaml
 
+  check-version:
+    name: Check the tag matches the package version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: ./.github/workflows/install-uv
+
+      - name: Compare versions
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          PACKAGE_VERSION="$(uv version --short)"
+          if [ "v${PACKAGE_VERSION}" != "$RELEASE_TAG" ]; then
+            echo "::error::The tag ${RELEASE_TAG} does not match the version ${PACKAGE_VERSION} in pyproject.toml"
+            exit 1
+          fi
+
   publish-test-pypi:
     name: Publish (test.pypi.org)
     runs-on: ubuntu-latest
-    needs: ci
+    needs: [ci, check-version]
     environment:
       name: test.pypi.org
       url: https://test.pypi.org/project/signalbot/${{ steps.get-version.outputs.package_version }}/
@@ -28,7 +48,7 @@ jobs:
 
       - name: Get Package Version
         id: get-version
-        run: echo "{package_version}=$(uv version --short)" >> $GITHUB_OUTPUT
+        run: echo "package_version=$(uv version --short)" >> "$GITHUB_OUTPUT"
 
       - name: Build package
         run: uv build
@@ -55,10 +75,39 @@ jobs:
 
       - name: Get Package Version
         id: get-version
-        run: echo "{package_version}=$(uv version --short)" >> $GITHUB_OUTPUT
+        run: echo "package_version=$(uv version --short)" >> "$GITHUB_OUTPUT"
 
       - name: Build package
         run: uv build
 
       - name: Publish package
         run: uv publish --token ${{ secrets.API_TOKEN }}
+
+  # Created last, so that every GitHub release is also on PyPI
+  release:
+    name: Create GitHub release
+    runs-on: ubuntu-latest
+    needs: publish-pypi
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      # GitHub's generated notes, grouped by the conventional commit prefix of the PR titles
+      - name: Generate release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/releases/generate-notes" -f tag_name="$RELEASE_TAG" --jq .body \
+            | python3 .github/scripts/release_notes.py > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |-
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --verify-tag \
+            --title "$RELEASE_TAG" --notes-file "$RUNNER_TEMP/notes.md"
