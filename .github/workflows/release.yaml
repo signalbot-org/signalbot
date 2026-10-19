@@ -79,7 +79,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: publish-pypi
     permissions:
-      contents: write
+      contents: write  # create the GitHub release
     steps:
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -108,5 +108,5 @@ jobs:
     name: Deploy docs
     needs: release
     permissions:
-      contents: write
+      contents: write  # deploy-docs pushes the docs to the gh-pages branch
     uses: $/.github/workflows/deploy-docs.yaml

@@ -4,8 +4,8 @@ on:
     types: [deploy-command]
 
 permissions:
-  pull-requests: write
-  deployments: write
+  pull-requests: write  # comment on the pull request with the deployed version
+  deployments: write  # create the test.pypi.org deployment and update its status
   contents: read
 
 jobs:
@@ -76,14 +76,17 @@ jobs:
         run: uv publish --index testpypi --token ${{ secrets.API_TOKEN }}  # zizmor: ignore[use-trusted-publishing]
 
       - name: Write comment in Pull Request
-        uses: peter-evans/create-or-update-comment@e8674b075228eee787fea43ef493e45ece1004c9  # v5.0.0
-        with:
-          issue-number: ${{ github.event.client_payload.pull_request.number }}
-          body: |
-            Pull Request has been deployed on test.pypi.org: [${{ steps.create-custom-version.outputs.pr_version }}](https://test.pypi.org/project/signalbot/${{ steps.create-custom-version.outputs.pr_version }}/) :rocket: You can test the package by running
-            ```bash
-            pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple signalbot==${{ steps.create-custom-version.outputs.pr_version }}
-            ```
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
+          PR_VERSION: ${{ steps.create-custom-version.outputs.pr_version }}
+        run: |
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file - <<EOF
+          Pull Request has been deployed on test.pypi.org: [${PR_VERSION}](https://test.pypi.org/project/signalbot/${PR_VERSION}/) :rocket: You can test the package by running
+          \`\`\`bash
+          pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple signalbot==${PR_VERSION}
+          \`\`\`
+          EOF
 
       - name: Set deployment status to success
         id: successful_deployment

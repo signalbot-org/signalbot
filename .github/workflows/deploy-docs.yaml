@@ -10,12 +10,14 @@ on:
         description: Release tag to deploy the docs of, e.g. v2.1.2
         required: true
         type: string
+permissions: {}
 
 jobs:
   deploy:
+    name: Deploy docs
     runs-on: ubuntu-24.04
     permissions:
-      contents: write
+      contents: write  # mike pushes the docs to the gh-pages branch
     env:
       # The tagged release when called by the release workflow, the given tag when run by hand
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}

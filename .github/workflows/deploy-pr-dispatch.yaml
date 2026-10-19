@@ -7,11 +7,12 @@ on:
     types: [created]
 
 permissions:
-  pull-requests: write
-  contents: write
+  pull-requests: write  # add a reaction to the comment with the command
+  contents: write  # send the repository_dispatch event that starts deploy-pr-command
 
 jobs:
   deploy-check:
+    name: Dispatch the deploy command
     runs-on: ubuntu-latest
     steps:
       - name: Trigger the deploy-pr-command workflow and add a reaction to the comment
