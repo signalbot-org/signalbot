@@ -27,7 +27,8 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout code
+      # The credentials are kept, mike needs them to push the docs to the gh-pages branch
+      - name: Checkout code  # zizmor: ignore[artipacked]
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ env.RELEASE_TAG }}

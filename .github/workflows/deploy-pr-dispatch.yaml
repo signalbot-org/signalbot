@@ -1,7 +1,9 @@
 name: Deploy Pull Request Dispatch
 
 on:
-  issue_comment:
+  # No code from the pull request is run here, and slash-command-dispatch only
+  # dispatches commands from users with write access to the repository
+  issue_comment:  # zizmor: ignore[dangerous-triggers]
     types: [created]
 
 permissions:
