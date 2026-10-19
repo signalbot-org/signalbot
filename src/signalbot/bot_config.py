@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from signalbot.client import ConnectionMode
 
@@ -45,6 +45,10 @@ class InMemoryConfig(BaseModel):
     """The configuration for the in-memory storage backend, which defaults to
     [SQLiteStorage](storage.md#signalbot.storage.SQLiteStorage) with memory storage.
     """
+
+    # Without it, any storage config that is not valid for another backend, e.g. one
+    # with a typo, would silently fall back to the in-memory storage
+    model_config = ConfigDict(extra="forbid")
 
     type: Literal["in-memory"] = Field(
         default="in-memory", description="The type of storage. Defaults to `in-memory`."

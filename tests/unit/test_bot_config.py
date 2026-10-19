@@ -4,9 +4,11 @@ from pathlib import Path
 
 import pytest
 import yaml
+from pydantic import ValidationError
 
 from signalbot.bot_config import (
     Config,
+    InMemoryConfig,
     RedisConfig,
     load_config,
 )
@@ -62,6 +64,24 @@ class TestLoadConfig:
         assert isinstance(config, Config)
         assert isinstance(config.storage, RedisConfig)
         assert config.storage.password == "secret"
+
+    @pytest.mark.parametrize("storage", [{}, {"type": "in-memory"}])
+    def test_load_config_from_dict_with_in_memory(self, storage: dict):
+        self._dict_config["storage"] = storage
+        config = load_config(self._dict_config)
+        assert isinstance(config.storage, InMemoryConfig)
+
+    @pytest.mark.parametrize(
+        "storage",
+        [
+            {"host": "redis_host"},
+            {"database": "bot.db"},
+        ],
+    )
+    def test_load_config_invalid_storage_is_not_in_memory(self, storage: dict):
+        self._dict_config["storage"] = storage
+        with pytest.raises(ValidationError):
+            load_config(self._dict_config)
 
     def test_load_config_from_json_file(self):
         self._config.retry_interval = 3
