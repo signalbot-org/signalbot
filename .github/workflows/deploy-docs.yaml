@@ -10,12 +10,14 @@ on:
         description: Release tag to deploy the docs of, e.g. v2.1.2
         required: true
         type: string
+permissions: {}
 
 jobs:
   deploy:
+    name: Deploy docs
     runs-on: ubuntu-24.04
     permissions:
-      contents: write
+      contents: write  # mike pushes the docs to the gh-pages branch
     env:
       # The tagged release when called by the release workflow, the given tag when run by hand
       RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
@@ -27,14 +29,17 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout code
-        uses: actions/checkout@v6
+      # The credentials are kept, mike needs them to push the docs to the gh-pages branch
+      - name: Checkout code  # zizmor: ignore[artipacked]
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Install uv
-        uses: ./.github/workflows/install-uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          version-file: uv.lock
 
       - name: Install dependencies
         run: uv sync --locked --group docs

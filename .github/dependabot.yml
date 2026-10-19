@@ -7,3 +7,15 @@ updates:
     directory: /
     schedule:
       interval: quarterly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: quarterly
+    cooldown:
+      default-days: 7
+    groups:
+      github-actions:
+        patterns: ['*']

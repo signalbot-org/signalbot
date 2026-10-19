@@ -7,37 +7,14 @@ hooks = [
 ]
 
 [[repos]]
-repo = "https://github.com/astral-sh/ruff-pre-commit"
-rev = "v0.16.2"
-hooks = [
-  { id = "ruff-check", types_or = ["python"], args = ["--fix"] },
-  { id = "ruff-format" },
-]
-
-[[repos]]
-repo = "https://github.com/astral-sh/uv-pre-commit"
-rev = "0.12.3"
-hooks = [
-  { id = "uv-lock" },
-]
-
-[[repos]]
-repo = "https://github.com/lyz-code/yamlfix"
-rev = "1.19.1"
-hooks = [
-  { id = "yamlfix" },
-]
-
-[[repos]]
 repo = "local"
 hooks = [
+  { id = "ruff-check", name = "ruff check", entry = "uv run ruff check --force-exclude --fix", language = "system", types_or = ["python"], require_serial = true },
+  { id = "ruff-format", name = "ruff format", entry = "uv run ruff format --force-exclude", language = "system", types_or = ["python", "pyi", "jupyter"], require_serial = true },
+  { id = "uv-lock", name = "uv-lock", entry = "uv lock", language = "system", files = "^(uv\\.lock|pyproject\\.toml|uv\\.toml)$", pass_filenames = false },
+  { id = "yamlfix", name = "yamlfix", entry = "uv run yamlfix", language = "system", types = ["yaml"] },
+  { id = "zizmor", name = "zizmor", entry = "uv run zizmor --no-progress", language = "system", types = ["yaml"], files = "(^|/)(\\.github/(workflows/[^/]+|dependabot)\\.ya?ml|action\\.ya?ml|\\.pre-commit-(config|hooks)\\.ya?ml)$", require_serial = true },
   { id = "ty", name = "ty", entry = "uv run ty check", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
-]
-
-[[repos]]
-repo = "https://github.com/tombi-toml/tombi-pre-commit"
-rev = "v1.4.1"
-hooks = [
-  { id = "tombi-format", args = ["--offline"] },
-  { id = "tombi-lint", args = ["--offline"] },
+  { id = "tombi-format", name = "tombi-format", entry = "uv run tombi format --offline", language = "system", types = ["toml"] },
+  { id = "tombi-lint", name = "tombi-lint", entry = "uv run tombi lint --offline", language = "system", types = ["toml"] },
 ]

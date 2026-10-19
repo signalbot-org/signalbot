@@ -12,32 +12,41 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   prek:
     name: Run code checks
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: ./.github/workflows/install-uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          version-file: uv.lock
 
-      - name: Install dependencies, needed for ty
+      - name: Install dependencies
         run: uv sync --locked --group examples
 
-      - uses: j178/prek-action@v2
+      - name: Run prek
+        run: uv run prek run --all-files --show-diff-on-failure --color=always
 
   unittest:
     name: Run unit tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-
-      - name: Print workflows
-        run: ls -R ./.github/workflows/
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install uv
-        uses: ./.github/workflows/install-uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          version-file: uv.lock
 
       - name: Install dependencies
         run: uv sync --locked --group examples
@@ -46,6 +55,6 @@ jobs:
         run: uv run pytest --cov=src/signalbot --cov-branch --cov-report=xml
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

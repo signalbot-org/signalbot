@@ -1,28 +1,26 @@
 name: Deploy Pull Request Dispatch
 
 on:
-  issue_comment:
+  # No code from the pull request is run here, and slash-command-dispatch only
+  # dispatches commands from users with write access to the repository
+  issue_comment:  # zizmor: ignore[dangerous-triggers]
     types: [created]
 
 permissions:
-  pull-requests: write
-  contents: write
+  pull-requests: write  # add a reaction to the comment with the command
+  contents: write  # send the repository_dispatch event that starts deploy-pr-command
 
 jobs:
   deploy-check:
+    name: Dispatch the deploy command
     runs-on: ubuntu-latest
     steps:
-      - name: Check if user has write access
-        uses: actions-cool/check-user-permission@main
-        id: checkUser
-        with:
-          require: write
-
       - name: Trigger the deploy-pr-command workflow and add a reaction to the comment
-        if: steps.checkUser.outputs.require-result == 'true'
         id: checkCommand
-        uses: peter-evans/slash-command-dispatch@v4
+        uses: peter-evans/slash-command-dispatch@9bdcd7914ec1b75590b790b844aa3b8eee7c683a  # v5.0.2
         with:
           commands: |
             deploy
+          # only users with write access to the repository can dispatch commands
+          permission: write
           token: ${{ secrets.GITHUB_TOKEN }}
