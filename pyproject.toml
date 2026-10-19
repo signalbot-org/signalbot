@@ -1,6 +1,5 @@
 [project]
 name = "signalbot"
-version = "2.1.2.dev0"
 description = "Framework to create your own Signal bots"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -28,6 +27,7 @@ dependencies = [
   "pyyaml>=6.0.3",
   "websockets>=14.1",
 ]
+dynamic = ["version"]
 
 [project.urls]
 repository = "https://github.com/signalbot-org/signalbot"
@@ -58,9 +58,11 @@ examples = [
   "typer>=0.23.2",
 ]
 
+# TODO: switch back to uv_build once it can take the version from the git tags,
+# see https://github.com/signalbot-org/signalbot/issues/326
 [build-system]
-requires = ["uv_build>=0.9.26,<0.12.0"]
-build-backend = "uv_build"
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
 
 [tool.datamodel-codegen.profiles.signal-cli-rest-api]
 input = "src/signalbot/_generated/json_schema/signal-cli-rest-api.json"
@@ -81,6 +83,12 @@ no-use-type-checking-imports = true
 all-exports-scope = "recursive"
 all-exports-collision-strategy = "minimal-prefix"
 output = "src/signalbot/_generated"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.hatch.build.targets.sdist]
+include = ["src/signalbot"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
@@ -158,6 +166,14 @@ runtime-evaluated-base-classes = [
 toml-version = "v1.1.0"
 files.exclude = ["uv.lock"]
 
+[tool.uv]
+# Rebuilds the project after a new commit or tag, so that its version isn't stale
+cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true } }]
+
+# Pin build dependencies as recommented in
+# https://github.com/ninoseki/uv-dynamic-versioning/blob/main/docs/tips.md#pinning-build-dependencies
+build-constraint-dependencies = ["dunamai==1.26.3", "hatchling==1.32.4", "jinja2==3.1.6", "markupsafe==3.0.4", "packaging==26.3", "pathspec==1.1.1", "pluggy==1.7.0", "tomlkit==0.15.2", "trove-classifiers==2026.9.21.13", "uv-dynamic-versioning==0.14.1"]
+
 [[tool.uv.index]]
 name = "testpypi"
 url = "https://test.pypi.org/simple/"
@@ -169,6 +185,10 @@ explicit = true
 # upstream PyPI package is built for mkdocs. See
 # https://zensical.org/docs/setup/versioning/
 mike = { git = "https://github.com/squidfunk/mike.git" }
+
+[tool.uv-dynamic-versioning]
+bump = true
+fallback-version = "0.0.0"
 
 [tool.yamlfix]
 explicit_start = false
