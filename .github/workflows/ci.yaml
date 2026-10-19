@@ -20,7 +20,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
       - name: Install uv
-        uses: ./.github/workflows/install-uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          version-file: uv.lock
 
       - name: Install dependencies, needed for ty
         run: uv sync --locked --group examples
@@ -33,11 +35,10 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
 
-      - name: Print workflows
-        run: ls -R ./.github/workflows/
-
       - name: Install uv
-        uses: ./.github/workflows/install-uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          version-file: uv.lock
 
       - name: Install dependencies
         run: uv sync --locked --group examples
