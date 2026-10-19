@@ -7,4 +7,4 @@ class GroupEntry(GeneratedGroupEntry):
 
     # Narrowed to a wrapped type; rationale in
     # docs/contributing/04_new_signal_cli_rest_api.md.
-    permissions: GroupPermissions  # pyright: ignore[reportIncompatibleVariableOverride]
+    permissions: GroupPermissions  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]

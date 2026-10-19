@@ -27,7 +27,7 @@ class QuotedAttachment(GeneratedQuotedAttachment):
 
     # Narrowed to a wrapped type; rationale in
     # docs/contributing/04_new_signal_cli_rest_api.md.
-    thumbnail: Attachment | None = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    thumbnail: Attachment | None = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
 
 
 class Quote(GeneratedQuote):
@@ -35,8 +35,8 @@ class Quote(GeneratedQuote):
 
     # Fields below are narrowed to wrapped types; rationale in
     # docs/contributing/04_new_signal_cli_rest_api.md.
-    attachments: list[QuotedAttachment] | None = None  # pyright: ignore[reportIncompatibleVariableOverride]
-    mentions: list[Mention] | None = None  # pyright: ignore[reportIncompatibleVariableOverride]
-    text_styles: list[TextStyle] | None = Field(  # pyright: ignore[reportIncompatibleVariableOverride]
+    attachments: list[QuotedAttachment] | None = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
+    mentions: list[Mention] | None = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
+    text_styles: list[TextStyle] | None = Field(  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-attribute-override]
         default=None, alias="textStyles"
     )

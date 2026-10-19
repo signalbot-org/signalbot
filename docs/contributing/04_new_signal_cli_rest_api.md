@@ -65,11 +65,13 @@ enforces this. Each domain package wraps the generated types it exposes:
   [`src/signalbot/attachments/attachment.py`](https://github.com/signalbot-org/signalbot/blob/main/src/signalbot/attachments/attachment.py).
 - If a container field then needs to point at one of these wrapped types instead of the generated
   type it replaces, that's a genuine override of the generated base class. pyright flags this as
-  `reportIncompatibleVariableOverride` because narrowing a mutable attribute's type in a subclass is
-  unsound in general — but it's sound here: every wrapped type is a strict superset of the generated
-  type it replaces (same fields, same validation, plus extra), and pydantic validates the value
-  against the narrower type on construction, so nothing bypasses it. Annotate the field with a bare
-  `# pyright: ignore[reportIncompatibleVariableOverride]` — the rationale above is why.
+  `reportIncompatibleVariableOverride` (and ty as `invalid-mutable-override`, or
+  `invalid-attribute-override` for `list[...]` fields) because narrowing a mutable attribute's type
+  in a subclass is unsound in general — but it's sound here: every wrapped type is a strict superset
+  of the generated type it replaces (same fields, same validation, plus extra), and pydantic
+  validates the value against the narrower type on construction, so nothing bypasses it. Annotate
+  the field with a bare `# pyright: ignore[reportIncompatibleVariableOverride]` followed by the
+  matching `# ty: ignore[...]` — the rationale above is why.
   See `GroupEntry.permissions` in
   [`src/signalbot/groups/group_entry.py`](https://github.com/signalbot-org/signalbot/blob/main/src/signalbot/groups/group_entry.py)
   or `Quote.attachments` in
