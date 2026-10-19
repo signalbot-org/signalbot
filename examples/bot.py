@@ -8,7 +8,7 @@ from examples.commands import (
     DeleteCommand,
     DeleteLocalAttachmentCommand,
     EditCommand,
-    EditNotifierCommand,
+    EditNotifierHandler,
     HelpCommand,
     LinkPreviewCommand,
     PingCommand,
@@ -53,7 +53,7 @@ def main() -> None:
     bot.register(RegexTriggeredCommand())
     bot.register(ReactCommand())
     bot.register(EditCommand())
-    bot.register(EditNotifierCommand())
+    bot.register(EditNotifierHandler())
     bot.register(DeleteCommand())
     bot.register(DeleteLocalAttachmentCommand())
     bot.register(StylesCommand())

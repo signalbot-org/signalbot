@@ -1,5 +1,6 @@
 from typing import Protocol, runtime_checkable
 
+from examples.commands.edit import EditNotifierHandler
 from signalbot import (
     DataMessageContext,
     DataMessageHandler,
@@ -20,7 +21,9 @@ def build_help_messages(bot: SignalBot) -> tuple[str, str]:
     for registered, _, _, _ in bot.handlers:
         if not isinstance(registered, HasHelpMessage):
             continue
-        if isinstance(registered, DataMessageHandler):
+        if isinstance(registered, DataMessageHandler) and not isinstance(
+            registered, EditNotifierHandler
+        ):
             commands.append(registered.help_message())
         else:
             handlers.append(registered.help_message())
