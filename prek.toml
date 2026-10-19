@@ -29,6 +29,13 @@ hooks = [
 ]
 
 [[repos]]
+repo = "https://github.com/zizmorcore/zizmor-pre-commit"
+rev = "v1.31.1"
+hooks = [
+  { id = "zizmor", args = ["--min-severity=medium"] },
+]
+
+[[repos]]
 repo = "local"
 hooks = [
   { id = "ty", name = "ty", entry = "uv run ty check", language = "system", types_or = ["python", "pyi"], pass_filenames = false },
