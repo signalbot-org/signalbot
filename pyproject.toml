@@ -44,7 +44,11 @@ dev = [
   "pytest-cov>=7.0.0",
   "pytest-mock>=3.15.1",
   "redis>=5.2.0",
+  "ruff>=0.16.2",
+  "tombi>=1.4.1",
   "ty>=0.0.69",
+  "yamlfix>=1.19.1",
+  "zizmor>=1.31.1",
 ]
 ci = [
   "uv>=0.13.1",
