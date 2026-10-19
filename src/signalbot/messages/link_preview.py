@@ -18,7 +18,7 @@ class Preview(GeneratedPreview):
     base64_thumbnail: str | None = None
     # Narrowed to a wrapped type; rationale in
     # docs/contributing/04_new_signal_cli_rest_api.md.
-    image: Attachment | None = None  # pyright: ignore[reportIncompatibleVariableOverride]
+    image: Attachment | None = None  # pyright: ignore[reportIncompatibleVariableOverride]  # ty: ignore[invalid-mutable-override]
 
 
 class LinkPreview(BaseModel):
