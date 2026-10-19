@@ -121,6 +121,11 @@ ignore = [
   "SLF001",  # Access private attributes
 ]
 
+# Standalone scripts run by the workflows, not a package.
+".github/scripts/**.py" = [
+  "INP001",  # Missing __init__.py file
+]
+
 # Examples print directly to stdout for the person running them locally.
 "examples/**.py" = [
   "T201",  # `print` found
