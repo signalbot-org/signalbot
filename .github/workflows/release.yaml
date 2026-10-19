@@ -10,7 +10,7 @@ permissions:
 jobs:
   ci:
     name: CI
-    uses: ./.github/workflows/ci.yaml
+    uses: $/.github/workflows/ci.yaml
 
   check-version:
     name: Check the package version matches the tag
@@ -109,4 +109,4 @@ jobs:
     needs: release
     permissions:
       contents: write
-    uses: ./.github/workflows/deploy-docs.yaml
+    uses: $/.github/workflows/deploy-docs.yaml
