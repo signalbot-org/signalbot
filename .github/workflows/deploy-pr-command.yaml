@@ -17,28 +17,23 @@ jobs:
     steps:
       - name: Create deployment
         id: create_deployment
-        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
-        with:
-          route: POST /repos/:repository/deployments
         env:
-          INPUT_REPOSITORY: ${{ github.repository }}
-          INPUT_REF: ${{ github.event.client_payload.pull_request.head.sha }}
-          INPUT_ENVIRONMENT: test.pypi.org
-          INPUT_AUTO_MERGE: false
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          PR_SHA: ${{ github.event.client_payload.pull_request.head.sha }}
+        run: |
+          deployment_id="$(gh api "repos/${GITHUB_REPOSITORY}/deployments" \
+            -f ref="$PR_SHA" -f environment=test.pypi.org -F auto_merge=false --jq .id)"
+          echo "id=${deployment_id}" >> "$GITHUB_OUTPUT"
 
       - name: Set deployment status to in progress
-        id: start_deployment
-        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
-        with:
-          route: POST /repos/:repository/deployments/:deployment/statuses
-          deployment: ${{ fromJson(steps.create_deployment.outputs.data).id }}
-          environment: test.pypi.org
-          log_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          state: in_progress
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.id }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
+            -f environment=test.pypi.org \
+            -f log_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -f state=in_progress
 
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
@@ -89,30 +84,27 @@ jobs:
           EOF
 
       - name: Set deployment status to success
-        id: successful_deployment
-        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
-        with:
-          route: POST /repos/:repository/deployments/:deployment/statuses
-          deployment: ${{ fromJson(steps.create_deployment.outputs.data).id }}
-          environment: test.pypi.org
-          environment_url: https://test.pypi.org/project/signalbot/${{ steps.create-custom-version.outputs.pr_version }}/
-          log_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          state: success
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.id }}
+          PR_VERSION: ${{ steps.create-custom-version.outputs.pr_version }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
+            -f environment=test.pypi.org \
+            -f environment_url="https://test.pypi.org/project/signalbot/${PR_VERSION}/" \
+            -f log_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -f state=success
 
       - name: Set deployment status to failure
-        id: failed_deployment
-        uses: octokit/request-action@b91aabaa861c777dcdb14e2387e30eddf04619ae  # v3.0.0
-        if: failure()
-        with:
-          route: POST /repos/:repository/deployments/:deployment/statuses
-          deployment: ${{ fromJson(steps.create_deployment.outputs.data).id }}
-          environment: test.pypi.org
-          environment_url: https://test.pypi.org/project/signalbot/${{ steps.create-custom-version.outputs.pr_version }}/
-          log_url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-          state: failure
+        # Skipped if the deployment itself could not be created
+        if: failure() && steps.create_deployment.outputs.id
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.id }}
+          PR_VERSION: ${{ steps.create-custom-version.outputs.pr_version }}
+        run: |-
+          gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
+            -f environment=test.pypi.org \
+            -f environment_url="https://test.pypi.org/project/signalbot/${PR_VERSION}/" \
+            -f log_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
+            -f state=failure
