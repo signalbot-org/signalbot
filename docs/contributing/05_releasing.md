@@ -27,8 +27,8 @@ Versions follow [semantic versioning](https://semver.org/): bump the major versi
     ```
 
 2. **Approve the PyPI deployment.** The
-   [Release Package](https://github.com/signalbot-org/signalbot/actions/workflows/release.yaml) workflow runs CI, checks that the built version matches the tag and publishes to [test.pypi.org](https://test.pypi.org/project/signalbot/).
-   Publishing to [pypi.org](https://pypi.org/project/signalbot/) waits for a maintainer to approve the `pypi.org` environment in the workflow run. Check the test.pypi.org release before approving.
+   [Release Package](https://github.com/signalbot-org/signalbot/actions/workflows/release.yaml) workflow runs CI and checks that the built version matches the tag.
+   Publishing to [pypi.org](https://pypi.org/project/signalbot/) then waits for a maintainer to approve the `pypi.org` environment in the workflow run.
 
 4. **Check the GitHub release.** Once the package is on PyPI, the workflow creates the [GitHub release](https://github.com/signalbot-org/signalbot/releases) with notes generated from the titles of the merged PRs.
    Edit the notes on GitHub if anything needs adding, e.g. migration steps for breaking changes.
