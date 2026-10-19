@@ -32,7 +32,7 @@ hooks = [
 repo = "https://github.com/zizmorcore/zizmor-pre-commit"
 rev = "v1.31.1"
 hooks = [
-  { id = "zizmor", args = ["--min-severity=medium"] },
+  { id = "zizmor" },
 ]
 
 [[repos]]

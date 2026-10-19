@@ -71,7 +71,7 @@ jobs:
         run: uv build
 
       - name: Publish package
-        run: uv publish --token ${{ secrets.API_TOKEN }}
+        run: uv publish --token ${{ secrets.API_TOKEN }}  # zizmor: ignore[use-trusted-publishing]
 
   # Created last, so that every GitHub release is also on PyPI
   release:
