@@ -85,4 +85,5 @@ jobs:
           \`\`\`bash
           pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple signalbot==${PR_VERSION}
           \`\`\`
+          Built and published by [this workflow run](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}).
           EOF
