@@ -59,31 +59,11 @@ jobs:
     permissions:
       contents: read
       pull-requests: write  # comment on the pull request with the deployed version
-      deployments: write  # create the test.pypi.org deployment and update its status
       id-token: write  # trusted publishing to test.pypi.org
     environment:
       name: test.pypi.org
+      url: https://test.pypi.org/project/signalbot/${{ needs.build-package.outputs.pr_version }}/
     steps:
-      - name: Create deployment
-        id: create_deployment
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_SHA: ${{ github.event.client_payload.pull_request.head.sha }}
-        run: |
-          deployment_id="$(gh api "repos/${GITHUB_REPOSITORY}/deployments" \
-            -f ref="$PR_SHA" -f environment=test.pypi.org -F auto_merge=false --jq .id)"
-          echo "id=${deployment_id}" >> "$GITHUB_OUTPUT"
-
-      - name: Set deployment status to in progress
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.id }}
-        run: |
-          gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
-            -f environment=test.pypi.org \
-            -f log_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            -f state=in_progress
-
       - name: Checkout Code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
@@ -109,36 +89,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.client_payload.pull_request.number }}
           PR_VERSION: ${{ needs.build-package.outputs.pr_version }}
-        run: |
+        run: |-
           gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file - <<EOF
           Pull Request has been deployed on test.pypi.org: [${PR_VERSION}](https://test.pypi.org/project/signalbot/${PR_VERSION}/) :rocket: You can test the package by running
           \`\`\`bash
           pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple signalbot==${PR_VERSION}
           \`\`\`
           EOF
-
-      - name: Set deployment status to success
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.id }}
-          PR_VERSION: ${{ needs.build-package.outputs.pr_version }}
-        run: |
-          gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
-            -f environment=test.pypi.org \
-            -f environment_url="https://test.pypi.org/project/signalbot/${PR_VERSION}/" \
-            -f log_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            -f state=success
-
-      - name: Set deployment status to failure
-        # Skipped if the deployment itself could not be created
-        if: failure() && steps.create_deployment.outputs.id
-        env:
-          GH_TOKEN: ${{ github.token }}
-          DEPLOYMENT_ID: ${{ steps.create_deployment.outputs.id }}
-          PR_VERSION: ${{ needs.build-package.outputs.pr_version }}
-        run: |-
-          gh api "repos/${GITHUB_REPOSITORY}/deployments/${DEPLOYMENT_ID}/statuses" \
-            -f environment=test.pypi.org \
-            -f environment_url="https://test.pypi.org/project/signalbot/${PR_VERSION}/" \
-            -f log_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}" \
-            -f state=failure
