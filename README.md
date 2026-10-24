@@ -1,4 +1,8 @@
-# Signal Bot Framework
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/signalbot-org/signalbot/main/docs/assets/banner-dark.svg">
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/signalbot-org/signalbot/main/docs/assets/banner-light.svg">
+  <img alt="signalbot" src="https://raw.githubusercontent.com/signalbot-org/signalbot/main/docs/assets/banner-light.svg" width="430">
+</picture>
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/signalbot?label=Downloads
 )](https://pypistats.org/packages/signalbot)
@@ -7,7 +11,10 @@
 [![CI](https://github.com/signalbot-org/signalbot/actions/workflows/ci.yaml/badge.svg)](https://github.com/signalbot-org/signalbot/actions/workflows/ci.yaml)
 [![codecov](https://codecov.io/gh/signalbot-org/signalbot/graph/badge.svg?token=N3ZA5MTU2P)](https://codecov.io/gh/signalbot-org/signalbot)
 
-Python package to build your own Signal bots.
+A Python framework for Signal bots. You write handlers for the events you care about, like messages or reactions,
+and respond by sending your own messages and reactions, or by creating polls. It talks to Signal through
+[signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) and comes with test helpers, so you can
+test your bot without a real Signal account.
 
 ## Installation
 
