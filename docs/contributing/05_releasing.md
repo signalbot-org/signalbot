@@ -47,7 +47,11 @@ version.
 ## Release notes
 
 The notes group commits by their [conventional commit](https://www.conventionalcommits.org/) prefix.
-Squash merge PRs and give them a prefixed title, so that each PR is one entry in the notes:
+PRs to `main` are squash merged, with the PR title as the commit title and the PR description as the commit
+body, so each PR is one entry in the notes.
+The [PR title](https://github.com/signalbot-org/signalbot/actions/workflows/pr-title.yaml) check makes sure the
+title has a prefix, i.e. one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`,
+`style` or `test`, with an optional scope and `!`:
 
 | Commit prefix                   | Section                  |
 | ------------------------------- | ------------------------ |
@@ -59,11 +63,11 @@ Squash merge PRs and give them a prefixed title, so that each PR is one entry in
 | Anything else, or no prefix     | Other changes            |
 
 Breaking changes are marked **Breaking:** in their section.
-To tell users how to migrate, end the squash commit message with a `BREAKING CHANGE:` footer when merging
-the PR; its text is added to the notes under the entry:
+To tell users how to migrate, end the PR description with a `BREAKING CHANGE:` footer, after the checklist.
+Its text is added to the notes under the entry; anything after it would be added too, so keep it last:
 
-```text
-feat: rename context.send to context.reply (#123)
+```markdown
+- [x] The prek checks pass `uv run prek run --all-files`
 
 BREAKING CHANGE: `context.send` is now `context.reply`.
 Rename every call, e.g. `context.send("hi")` becomes `context.reply("hi")`.
