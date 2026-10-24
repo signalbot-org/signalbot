@@ -4,10 +4,10 @@ title: Overview
 
 # Signalbot
 
-Python package to build your own Signal bots.
-
-The package provides methods to easily listen for incoming messages and responding or reacting on them.
-It also provides a class to develop new handlers, which then can be registered within the bot.
+A Python framework for Signal bots. You write handlers for the events you care about, like messages or reactions,
+and respond by sending your own messages and reactions, or by creating polls. It talks to Signal through
+[signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) and comes with test helpers, so you can
+test your bot without a real Signal account.
 
 Here is minimal example of what that looks like:
 ```python

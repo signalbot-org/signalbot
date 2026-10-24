@@ -13,6 +13,8 @@ extra_css = ["stylesheets/extra.css"]
 
 [project.theme]
 language = "en"
+logo = "assets/logo.svg"
+favicon = "assets/logo.svg"
 
 features = [
   "announce.dismiss",
@@ -34,7 +36,6 @@ features = [
 ]
 
 [project.theme.icon]
-logo = "fontawesome/solid/book"
 repo = "fontawesome/brands/github"
 
 [[project.theme.palette]]

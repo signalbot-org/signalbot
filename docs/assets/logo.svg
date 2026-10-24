@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">signalbot</title>
+  <defs>
+    <linearGradient id="bubble" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4F8CFF"/>
+      <stop offset="1" stop-color="#6D3BE8"/>
+    </linearGradient>
+  </defs>
+
+  <!-- signal waves -->
+  <g fill="none" stroke="#2DD4BF" stroke-width="7" stroke-linecap="round">
+    <path d="M111.15 21.86 A22 22 0 0 0 111.15 50.14"/>
+    <path d="M144.85 21.86 A22 22 0 0 1 144.85 50.14"/>
+    <path d="M100.42 12.86 A36 36 0 0 0 100.42 59.14" opacity="0.6"/>
+    <path d="M155.58 12.86 A36 36 0 0 1 155.58 59.14" opacity="0.6"/>
+  </g>
+
+  <!-- antenna -->
+  <rect x="122" y="40" width="12" height="40" rx="6" fill="#4F8CFF"/>
+  <circle cx="128" cy="36" r="11" fill="#2DD4BF"/>
+
+  <!-- chat bubble head -->
+  <path fill="url(#bubble)" d="M72 72 H184 A48 48 0 0 1 232 120 V164 A48 48 0 0 1 184 212 H108 L50 244 L62 206 A48 48 0 0 1 24 164 V120 A48 48 0 0 1 72 72 Z"/>
+  <path fill="#FFFFFF" opacity="0.14" d="M72 80 H184 A40 40 0 0 1 222 108 H34 A40 40 0 0 1 72 80 Z"/>
+
+  <!-- visor -->
+  <rect x="54" y="102" width="148" height="84" rx="34" fill="#0F172A"/>
+
+  <!-- eyes -->
+  <g fill="none" stroke="#F8FAFC" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M84 146 L98 128 L112 146"/>
+    <path d="M144 146 L158 128 L172 146"/>
+  </g>
+
+  <!-- typing dots -->
+  <g fill="#2DD4BF">
+    <circle cx="112" cy="166" r="5.5" opacity="0.5"/>
+    <circle cx="128" cy="166" r="5.5" opacity="0.75"/>
+    <circle cx="144" cy="166" r="5.5"/>
+  </g>
+</svg>

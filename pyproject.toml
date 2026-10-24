@@ -1,6 +1,6 @@
 [project]
 name = "signalbot"
-description = "Framework to create your own Signal bots"
+description = "A Python framework for building Signal bots"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
@@ -164,6 +164,11 @@ ignore = [
 # Examples print directly to stdout for the person running them locally.
 "examples/**.py" = [
   "T201",  # `print` found
+]
+
+# Standalone maintenance scripts, not part of any package.
+"scripts/**.py" = [
+  "INP001",  # Missing __init__.py file
 ]
 
 # Ignore line too long for the generated models, since they are generated and not meant to be edited by hand.
