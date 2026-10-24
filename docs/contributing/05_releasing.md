@@ -37,7 +37,7 @@ version.
    Publishing to [pypi.org](https://pypi.org/project/signalbot/) then waits for a maintainer to approve the `pypi.org` environment in the workflow run.
 
 3. **Check the GitHub release.** Once the package is on PyPI, the workflow creates the [GitHub release](https://github.com/signalbot-org/signalbot/releases) with notes generated from the commits since the previous tag.
-   Edit the notes on GitHub if anything needs adding, e.g. migration steps for breaking changes.
+   Edit the notes on GitHub if anything needs adding.
 
 4. **Check the documentation.** Last, the workflow deploys the [docs](https://signalbot-org.github.io/signalbot/) for the new version and points `latest` at it.
 
@@ -56,5 +56,17 @@ Squash merge PRs and give them a prefixed title, so that each PR is one entry in
 | Anything else, or no prefix     | Other changes            |
 
 Breaking changes are marked **Breaking:** in their section.
+To tell users how to migrate, end the squash commit message with a `BREAKING CHANGE:` footer when merging
+the PR; its text is added to the notes under the entry:
+
+```text
+feat: rename context.send to context.reply (#123)
+
+BREAKING CHANGE: `context.send` is now `context.reply`.
+Rename every call, e.g. `context.send("hi")` becomes `context.reply("hi")`.
+```
+
+The footer also makes the release a major version, as `feat!:` does.
+
 The sections and the notes template are set in the `[tool.git-cliff]` section of
 [`pyproject.toml`](https://github.com/signalbot-org/signalbot/blob/main/pyproject.toml).
