@@ -7,6 +7,7 @@ permissions:
   pull-requests: write  # comment on the pull request with the deployed version
   deployments: write  # create the test.pypi.org deployment and update its status
   contents: read
+  id-token: write  # trusted publishing to test.pypi.org
 
 jobs:
   publish-package:
@@ -68,7 +69,7 @@ jobs:
         run: uv build
 
       - name: Publish package
-        run: uv publish --index testpypi --token ${{ secrets.API_TOKEN }}  # zizmor: ignore[use-trusted-publishing]
+        run: uv publish --index testpypi --trusted-publishing always
 
       - name: Write comment in Pull Request
         env:
