@@ -181,12 +181,6 @@ cache-keys = [{ file = "pyproject.toml" }, { git = { commit = true, tags = true 
 # https://github.com/ninoseki/uv-dynamic-versioning/blob/main/docs/tips.md#pinning-build-dependencies
 build-constraint-dependencies = ["dunamai==1.26.3", "hatchling==1.32.4", "jinja2==3.1.6", "markupsafe==3.0.4", "packaging==26.3", "pathspec==1.1.1", "pluggy==1.7.0", "tomlkit==0.15.2", "trove-classifiers==2026.9.21.13", "uv-dynamic-versioning==0.14.1"]
 
-[[tool.uv.index]]
-name = "testpypi"
-url = "https://test.pypi.org/simple/"
-publish-url = "https://test.pypi.org/legacy/"
-explicit = true
-
 [tool.uv.sources]
 # Zensical only supports versioning through its own fork of mike; the
 # upstream PyPI package is built for mkdocs. See
