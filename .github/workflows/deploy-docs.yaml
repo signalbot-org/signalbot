@@ -29,12 +29,12 @@ jobs:
             exit 1
           fi
 
-      # The credentials are kept, mike needs them to push the docs to the gh-pages branch
-      - name: Checkout code  # zizmor: ignore[artipacked]
+      - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Install uv
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
@@ -49,5 +49,10 @@ jobs:
           git config --global user.name "Mike Deploy Bot"
           git config --global user.email "mike.deploy@email.com"
 
+      # Only this step gets the token, mike needs it to push the docs to the gh-pages branch
       - name: Build and deploy a new version with mike
-        run: uv run mike deploy --push --update-aliases "${RELEASE_TAG#v}" latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |-
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}"
+          uv run mike deploy --push --update-aliases "${RELEASE_TAG#v}" latest
