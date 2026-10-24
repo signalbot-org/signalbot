@@ -1,0 +1,25 @@
+name: PR title
+
+on:
+  # PR titles must be conventional commints for git-cliff to work
+  pull_request:
+    branches: [main]
+    types: [opened, edited, reopened, synchronize]
+permissions: {}
+
+jobs:
+  check:
+    name: Check PR title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the title is a conventional commit
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |-
+          TYPES="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test"
+          if [[ ! "$TITLE" =~ ^($TYPES)(\([a-z0-9-]+\))?!?:\ [^[:space:]] ]]; then
+            echo "::error::The PR title must be a conventional commit, e.g. 'feat: add polls' or 'fix(groups): ...'." \
+              "Allowed types: ${TYPES//|/, }." \
+              "See https://signalbot-org.github.io/signalbot/latest/contributing/05_releasing/#release-notes"
+            exit 1
+          fi

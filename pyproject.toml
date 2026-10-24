@@ -64,6 +64,9 @@ examples = [
   "anyio>=4.12.1",
   "typer>=0.23.2",
 ]
+release = [
+  "git-cliff>=2.14.2",
+]
 
 # TODO: switch back to uv_build once it can take the version from the git tags,
 # see https://github.com/signalbot-org/signalbot/issues/326
@@ -90,6 +93,28 @@ no-use-type-checking-imports = true
 all-exports-scope = "recursive"
 all-exports-collision-strategy = "minimal-prefix"
 output = "src/signalbot/_generated"
+
+[tool.git-cliff.git]
+filter_unconventional = false
+commit_preprocessors = [
+  # GitHub's merge message has the PR title on its third line
+  { pattern = '^Merge pull request #[0-9]+ from \S+\n\n', replace = "" },
+  # The PR number is linked from the GitHub API instead
+  { pattern = '(?m)\s*\(#[0-9]+\)$', replace = "" },
+]
+commit_parsers = [
+  { message = "^Merge branch", skip = true },
+  { field = "scope", pattern = "^deps$", group = "<!-- 3 -->Dependencies" },
+  { field = "scope", pattern = "^deps-dev$", group = "<!-- 4 -->Dev dependencies" },
+  { message = "^feat", group = "<!-- 0 -->New features" },
+  { message = "^fix", group = "<!-- 1 -->Bug fixes" },
+  { message = "^docs", group = "<!-- 2 -->Documentation" },
+  { message = ".*", group = "<!-- 5 -->Other changes" },
+]
+
+[tool.git-cliff.remote.github]
+owner = "signalbot-org"
+repo = "signalbot"
 
 [tool.hatch.version]
 source = "uv-dynamic-versioning"
@@ -134,11 +159,6 @@ ignore = [
 # bot's internals is the point.
 "src/signalbot/test_utils/**.py" = [
   "SLF001",  # Access private attributes
-]
-
-# Standalone scripts run by the workflows, not a package.
-".github/scripts/**.py" = [
-  "INP001",  # Missing __init__.py file
 ]
 
 # Examples print directly to stdout for the person running them locally.
