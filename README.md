@@ -4,6 +4,7 @@
   <img alt="signalbot" src="https://raw.githubusercontent.com/signalbot-org/signalbot/main/docs/assets/banner-light.svg" width="430">
 </picture>
 <br>
+<br>
 
 [![PyPI Downloads](https://img.shields.io/pypi/dm/signalbot?label=Downloads
 )](https://pypistats.org/packages/signalbot)
