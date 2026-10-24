@@ -94,7 +94,6 @@ all-exports-scope = "recursive"
 all-exports-collision-strategy = "minimal-prefix"
 output = "src/signalbot/_generated"
 
-# Release notes and the next version, the notes template is .github/release-notes.md.tera
 [tool.git-cliff.git]
 filter_unconventional = false
 commit_preprocessors = [
@@ -103,7 +102,6 @@ commit_preprocessors = [
   # The PR number is linked from the GitHub API instead
   { pattern = '(?m)\s*\(#[0-9]+\)$', replace = "" },
 ]
-# The first match wins; the number in the comment orders the sections
 commit_parsers = [
   { message = "^Merge branch", skip = true },
   { field = "scope", pattern = "^deps$", group = "<!-- 3 -->Dependencies" },

@@ -46,12 +46,7 @@ version.
 
 ## Release notes
 
-The notes group commits by their [conventional commit](https://www.conventionalcommits.org/) prefix.
-PRs to `main` are squash merged, with the PR title as the commit title and the PR description as the commit
-body, so each PR is one entry in the notes.
-The [PR title](https://github.com/signalbot-org/signalbot/actions/workflows/pr-title.yaml) check makes sure the
-title has a prefix, i.e. one of `build`, `chore`, `ci`, `docs`, `feat`, `fix`, `perf`, `refactor`, `revert`,
-`style` or `test`, with an optional scope and `!`:
+The notes group commits by their [conventional commit](https://www.conventionalcommits.org/) prefix:
 
 | Commit prefix                   | Section                  |
 | ------------------------------- | ------------------------ |
@@ -72,7 +67,3 @@ Its text is added to the notes under the entry; anything after it would be added
 BREAKING CHANGE: `context.send` is now `context.reply`.
 Rename every call, e.g. `context.send("hi")` becomes `context.reply("hi")`.
 ```
-
-The sections are set in the `[tool.git-cliff]` section of
-[`pyproject.toml`](https://github.com/signalbot-org/signalbot/blob/main/pyproject.toml) and the notes template
-in [`.github/release-notes.md.tera`](https://github.com/signalbot-org/signalbot/blob/main/.github/release-notes.md.tera).

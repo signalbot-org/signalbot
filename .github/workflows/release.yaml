@@ -93,7 +93,6 @@ jobs:
           version-file: uv.lock
           enable-cache: false  # only git-cliff is installed, which the cache would not keep
 
-      # Configured in the [tool.git-cliff] section of pyproject.toml
       - name: Generate release notes
         env:
           GITHUB_TOKEN: ${{ github.token }}

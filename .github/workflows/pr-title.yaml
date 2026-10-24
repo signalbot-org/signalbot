@@ -1,8 +1,7 @@
 name: PR title
 
 on:
-  # PRs are squash merged with their title as the commit title, which git-cliff
-  # uses for the release notes and the next version
+  # PR titles must be conventional commints for git-cliff to work
   pull_request:
     branches: [main]
     types: [opened, edited, reopened, synchronize]
