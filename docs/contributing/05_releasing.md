@@ -26,10 +26,13 @@ version.
     ```bash
     git switch main
     git pull
-    TAG=$(uv run git-cliff --bumped-version) && git tag "$TAG" && git push origin "$TAG"
+    TAG=$(uv run --only-group release git-cliff --bumped-version) && git tag "$TAG" && git push origin "$TAG"
     ```
-    To see the tag and the release notes before pushing, run `uv run git-cliff --bumped-version` and
-    `uv run git-cliff --unreleased --bump` on their own.
+    To see the tag and the release notes before pushing, run these on their own:
+    ```bash
+    uv run --only-group release git-cliff --bumped-version
+    uv run --only-group release git-cliff --body-file .github/release-notes.md.tera --unreleased --bump
+    ```
     Set `GITHUB_TOKEN` (e.g. `GITHUB_TOKEN=$(gh auth token)`) to fill in the PR authors and links as in CI.
 
 2. **Approve the PyPI deployment.** The
@@ -66,7 +69,6 @@ BREAKING CHANGE: `context.send` is now `context.reply`.
 Rename every call, e.g. `context.send("hi")` becomes `context.reply("hi")`.
 ```
 
-The footer also makes the release a major version, as `feat!:` does.
-
-The sections and the notes template are set in the `[tool.git-cliff]` section of
-[`pyproject.toml`](https://github.com/signalbot-org/signalbot/blob/main/pyproject.toml).
+The sections are set in the `[tool.git-cliff]` section of
+[`pyproject.toml`](https://github.com/signalbot-org/signalbot/blob/main/pyproject.toml) and the notes template
+in [`.github/release-notes.md.tera`](https://github.com/signalbot-org/signalbot/blob/main/.github/release-notes.md.tera).

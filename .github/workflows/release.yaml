@@ -91,13 +91,15 @@ jobs:
         uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
         with:
           version-file: uv.lock
+          enable-cache: false  # only git-cliff is installed, which the cache would not keep
 
       # Configured in the [tool.git-cliff] section of pyproject.toml
       - name: Generate release notes
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          uv run --only-group release git-cliff --current --output "$RUNNER_TEMP/notes.md"
+          uv run --only-group release git-cliff --body-file .github/release-notes.md.tera --current \
+            --output "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md"
 
       - name: Create release

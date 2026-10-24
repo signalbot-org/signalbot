@@ -1,0 +1,28 @@
+{#- git-cliff template for the GitHub release notes, see docs/contributing/05_releasing.md -#}
+{%- set repo_url = "https://github.com/" ~ remote.github.owner ~ "/" ~ remote.github.repo -%}
+{%- if commits -%}
+## What's Changed
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags }}
+{% for commit in commits %}
+* {% if commit.breaking %}**Breaking:** {% endif %}{{ commit.message | split(pat="\n") | first | upper_first }}
+  {%- if commit.remote.username %} by @{{ commit.remote.username }}{% endif %}
+  {%- if commit.remote.pr_number %} in {{ repo_url }}/pull/{{ commit.remote.pr_number }}{% endif %}
+{%- if commit.breaking and commit.breaking_description != commit.message %}
+
+{{ commit.breaking_description | trim | indent(prefix="  ", first=true) }}
+{%- endif %}
+{%- endfor %}
+{% endfor %}
+{%- endif %}
+{%- set new_contributors = github.contributors | filter(attribute="is_first_time", value=true) %}
+{%- if new_contributors | length != 0 %}
+## New Contributors
+{% for contributor in new_contributors %}
+* @{{ contributor.username }} made their first contribution
+  {%- if contributor.pr_number %} in {{ repo_url }}/pull/{{ contributor.pr_number }}{% endif %}
+{%- endfor %}
+{% endif %}
+{%- if previous.version %}
+**Full Changelog**: {{ repo_url }}/compare/{{ previous.version }}...{{ version }}
+{%- endif %}
