@@ -26,7 +26,7 @@ version.
     ```bash
     git switch main
     git pull
-    TAG=$(uv run --only-group release git-cliff --bumped-version) && git tag "$TAG" && git push origin "$TAG"
+    TAG=$(uv run --only-group release git-cliff --bumped-version) && git tag -s "$TAG" -m "$TAG" && git push origin "$TAG"
     ```
     To see the tag and the release notes before pushing, run these on their own:
     ```bash
