@@ -16,7 +16,7 @@ Check out how in the [mock_chat section](#mock-chat).
 1. Run [signal-cli-rest-api](https://github.com/bbernhard/signal-cli-rest-api) in `normal` mode.
     ```bash
     docker run -p 8080:8080 \
-        -v $(pwd)/signal-cli-config:/home/.local/share/signal-cli \
+        -v $HOME/.local/share/signal-api:/home/.local/share/signal-cli \
         -e 'MODE=normal' bbernhard/signal-cli-rest-api:latest
     ```
 
@@ -24,12 +24,13 @@ Check out how in the [mock_chat section](#mock-chat).
 
 3. In your Signal app, open settings and scan the QR code.
 The server can now receive and send messages.
-The access key will be stored in `$(PWD)/signal-cli-config`.
+The access key will be stored in `$HOME/.local/share/signal-api`.
+Signalbot expects this location to find downloaded attachments, see `Attachment.local_path()`.
 
 4. Stop the container and start it again in `json-rpc` mode.
     ```bash
     docker run -p 8080:8080 \
-        -v $(pwd)/signal-cli-config:/home/.local/share/signal-cli \
+        -v $HOME/.local/share/signal-api:/home/.local/share/signal-cli \
         -e 'MODE=json-rpc' bbernhard/signal-cli-rest-api:latest
     ```
 
