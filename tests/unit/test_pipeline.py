@@ -337,6 +337,24 @@ class TestConsumeResilience(TestCommon):
         with pytest.raises(RuntimeError, match="boom"):
             await pipeline._consume_new_item(1)
 
+    async def test_consume_new_item_marks_failed_job_done(self):
+        pipeline = self.signal_bot._pipeline
+
+        class ExplodingHandler(DataMessageHandler):
+            async def handle_data_message(self, context: DataMessageContext) -> None:
+                error_msg = "boom"
+                raise RuntimeError(error_msg)
+
+        self.signal_bot.register(ExplodingHandler())
+        await pipeline.resolve_handlers()
+        await pipeline._dispatch_to_handlers(_private_message())
+
+        with pytest.raises(RuntimeError, match="boom"):
+            await pipeline._consume_new_item(1)
+
+        # A failed job must still count as done, or `join()` would hang
+        await asyncio.wait_for(pipeline._q.join(), timeout=1)
+
 
 class _Recorder(DummyHandler):
     """Catch-all handler, only used to check which handlers get queued."""
