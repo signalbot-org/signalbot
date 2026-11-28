@@ -1,5 +1,6 @@
 from pathlib import Path as PathlibPath
 
+import pytest
 from anyio import Path as AnyIOPath
 
 from signalbot.messages import LinkPreview, SendMessage
@@ -78,3 +79,23 @@ async def test_send_message_link_preview_with_thumbnail_path(tmp_path: PathlibPa
 
     assert result.link_preview is not None
     assert result.link_preview.base64_thumbnail == "cGF5bG9hZA=="
+
+
+def test_link_preview_url_must_be_in_text():
+    link_preview = LinkPreview(
+        description="", title="Example", url="https://example.com", thumbnail="x"
+    )
+
+    with pytest.raises(ValueError, match="URL must be present in the text"):
+        SendMessage(text="no link here", link_preview=link_preview)
+    with pytest.raises(ValueError, match="URL must be present in the text"):
+        SendMessage(link_preview=link_preview)
+
+
+def test_path_fields_have_a_string_json_schema():
+    schema = SendMessage.model_json_schema()
+
+    assert schema["properties"]["attachments"]["anyOf"][0] == {
+        "items": {"type": "string"},
+        "type": "array",
+    }

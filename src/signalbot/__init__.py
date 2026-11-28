@@ -1,5 +1,4 @@
-import importlib.metadata
-
+from signalbot._utils.version import package_version
 from signalbot.attachments import (
     Attachment,
     DeleteAttachmentError,
@@ -216,7 +215,4 @@ __all__ = [
     "text_triggered",
 ]
 
-try:
-    __version__ = importlib.metadata.version(__name__)
-except importlib.metadata.PackageNotFoundError:
-    __version__ = "0.0.0"
+__version__ = package_version(__name__)

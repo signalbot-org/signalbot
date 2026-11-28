@@ -42,11 +42,10 @@ class ReactionActions(BotActionsBase):
             if message.is_group():
                 recipient = self._recipients.resolve(recipient)
 
-                if target_author is None:
-                    error_msg = "Cannot react to group message without source uuid"
-                    raise ValueError(error_msg)
-            elif target_author is None:
-                error_msg = "Message does not contain a source"
+            # Only reachable for group messages: for a private message,
+            # `source_or_group_id()` above already raised if there's no source
+            if target_author is None:
+                error_msg = "Cannot react to group message without source uuid"
                 raise ValueError(error_msg)
 
         reaction_request = SendReactionRequest(

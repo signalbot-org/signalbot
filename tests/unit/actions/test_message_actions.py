@@ -1,4 +1,5 @@
 import logging
+from typing import TYPE_CHECKING, cast
 
 import pytest
 from pytest_mock import MockerFixture
@@ -6,7 +7,10 @@ from pytest_mock import MockerFixture
 from signalbot._actions.messages import MessageActions
 from signalbot._generated import SendMessageResponse
 from signalbot.messages import SendMessage
-from tests.conftest import PHONE_NUMBER
+from tests.conftest import GROUP_ID, PHONE_NUMBER
+
+if TYPE_CHECKING:
+    from unittest.mock import AsyncMock
 
 RECIPIENT = "+4915112345678"
 OTHER_RECIPIENT = "+4915187654321"
@@ -74,3 +78,23 @@ async def test_send_multiple_associates_each_response_with_its_recipient(
         (RECIPIENT, 1638715559464),
         (OTHER_RECIPIENT, 1638715559465),
     ]
+
+
+@pytest.mark.parametrize(
+    "recipients",
+    [
+        pytest.param([RECIPIENT, GROUP_ID], id="contact-and-group"),
+        pytest.param([GROUP_ID, GROUP_ID], id="two-groups"),
+    ],
+)
+async def test_send_multiple_rejects_invalid_recipient_mix(
+    mocker: MockerFixture, caplog: pytest.LogCaptureFixture, recipients: list[str]
+):
+    actions = _message_actions(mocker, [])
+
+    with caplog.at_level(logging.WARNING):
+        sent = await actions.send_multiple(SendMessage(text="hi"), recipients)
+
+    assert sent == []
+    cast("AsyncMock", actions._signal.messages.send).assert_not_awaited()
+    assert "send_multiple requires" in caplog.text

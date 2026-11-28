@@ -115,3 +115,16 @@ class TestLoadConfig:
             assert config.retry_interval == self._config.retry_interval
         finally:
             Path(temp_path).unlink()
+
+
+class TestLoadConfigInvalid:
+    def test_unsupported_file_suffix(self, tmp_path: Path):
+        path = tmp_path / "config.toml"
+        path.write_text("")
+
+        with pytest.raises(ValueError, match="Invalid config"):
+            load_config(path)
+
+    def test_unsupported_type(self):
+        with pytest.raises(ValueError, match="Invalid config"):
+            load_config(42)  # ty: ignore[invalid-argument-type]

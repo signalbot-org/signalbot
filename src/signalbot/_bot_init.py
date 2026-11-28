@@ -34,34 +34,22 @@ class BotComponents(NamedTuple):
     storage: SQLiteStorage | RedisStorage
 
 
-def _resolve_auth(
-    config: Config, logger: logging.Logger
-) -> BasicAuthentication | BearerAuthentication | None:
+def _resolve_auth(config: Config) -> BasicAuthentication | BearerAuthentication | None:
     if isinstance(config.auth, BasicAuthConfig):
         return BasicAuthentication(config.auth.username, config.auth.password)
     if isinstance(config.auth, BearerAuthConfig):
         return BearerAuthentication(config.auth.token)
-
-    if config.auth is not None:
-        error_msg = f"Unsupported auth type '{config.auth}', "
-        error_msg += "no authentication will be used."
-        logger.warning(error_msg)
     return None
 
 
-def _build_signal_api(config: Config, logger: logging.Logger) -> SignalAPI:
-    auth = _resolve_auth(config, logger)
-    try:
-        return SignalAPI(
-            config.signal_service,
-            config.phone_number,
-            auth,
-            download_attachments=config.download_attachments,
-            connection_mode=config.connection_mode,
-        )
-    except KeyError as e:
-        error_msg = "Could not initialize SignalAPI with given config"
-        raise SignalBotError(error_msg) from e
+def _build_signal_api(config: Config) -> SignalAPI:
+    return SignalAPI(
+        config.signal_service,
+        config.phone_number,
+        _resolve_auth(config),
+        download_attachments=config.download_attachments,
+        connection_mode=config.connection_mode,
+    )
 
 
 def _build_event_loop() -> asyncio.AbstractEventLoop:
@@ -120,7 +108,7 @@ def build_components(config: Config, logger: logging.Logger) -> BotComponents:
     """
     event_loop = _build_event_loop()
     return BotComponents(
-        signal=_build_signal_api(config, logger),
+        signal=_build_signal_api(config),
         event_loop=event_loop,
         scheduler=_build_scheduler(event_loop),
         storage=_build_storage(config, logger),
