@@ -8,6 +8,7 @@ from .answer_message import AnswerMessage
 from .attachment import Attachment
 from .attachment_data import AttachmentData
 from .background_gradient import BackgroundGradient
+from .badge import Badge
 from .busy_message import BusyMessage
 from .call_message import CallMessage
 from .contact import Contact
@@ -61,6 +62,7 @@ __all__ = [
     "Attachment",
     "AttachmentData",
     "BackgroundGradient",
+    "Badge",
     "BusyMessage",
     "CallMessage",
     "Contact",

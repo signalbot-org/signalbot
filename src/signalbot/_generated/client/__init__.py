@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from .about import About
+from .account import Account
 from .contact_profile import ContactProfile
 from .group_entry import GroupEntry
 from .identity_entry import IdentityEntry
@@ -15,6 +16,7 @@ from .set_username_response import SetUsernameResponse
 
 __all__ = [
     "About",
+    "Account",
     "ContactProfile",
     "GroupEntry",
     "IdentityEntry",

@@ -15,5 +15,7 @@ class SendMessageV1(BaseModel):
     )
     is_group: bool | None = None
     message: str
-    number: str
+    number: str = Field(
+        ..., description="Account identifier (E.164 phone number or ACI UUID)"
+    )
     recipients: list[str]

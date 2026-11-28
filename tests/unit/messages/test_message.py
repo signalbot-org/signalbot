@@ -249,7 +249,10 @@ RAW_REMOTE_DELETE_DATA_MESSAGE = envelope(
         "message": None,
         "expiresInSeconds": 0,
         "viewOnce": False,
-        "remoteDelete": {"timestamp": REMOTE_DELETE_TIMESTAMP},
+        "remoteDelete": {
+            "targetTimestamp": REMOTE_DELETE_TIMESTAMP,
+            "timestamp": REMOTE_DELETE_TIMESTAMP,
+        },
         "groupInfo": {"groupId": GROUP_ID, "type": "DELIVER", "revision": 1},
     }
 )
@@ -261,7 +264,10 @@ RAW_REMOTE_DELETE_SYNC_MESSAGE = envelope(
             "message": None,
             "expiresInSeconds": 0,
             "viewOnce": False,
-            "remoteDelete": {"timestamp": REMOTE_DELETE_TIMESTAMP},
+            "remoteDelete": {
+                "targetTimestamp": REMOTE_DELETE_TIMESTAMP,
+                "timestamp": REMOTE_DELETE_TIMESTAMP,
+            },
             "mentions": [],
             "attachments": [],
             "contacts": [],
@@ -284,7 +290,10 @@ RAW_REMOTE_DELETE_SYNC_MESSAGE_PRIVATE_CONVERSATION = envelope(
             "expiresInSeconds": 0,
             "isExpirationUpdate": False,
             "viewOnce": False,
-            "remoteDelete": {"timestamp": REMOTE_DELETE_TIMESTAMP},
+            "remoteDelete": {
+                "targetTimestamp": REMOTE_DELETE_TIMESTAMP,
+                "timestamp": REMOTE_DELETE_TIMESTAMP,
+            },
         }
     }
 )

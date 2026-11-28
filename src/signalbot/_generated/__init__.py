@@ -49,6 +49,7 @@ from .api.update_profile_request import UpdateProfileRequest
 from .api.verify_number_settings import VerifyNumberSettings
 from .api.vote_request import VoteRequest
 from .client.about import About
+from .client.account import Account
 from .client.contact_profile import ContactProfile
 from .client.group_entry import GroupEntry
 from .client.identity_entry import IdentityEntry
@@ -77,6 +78,7 @@ from .receive.answer_message import AnswerMessage
 from .receive.attachment import Attachment
 from .receive.attachment_data import AttachmentData
 from .receive.background_gradient import BackgroundGradient
+from .receive.badge import Badge
 from .receive.busy_message import BusyMessage
 from .receive.call_message import CallMessage
 from .receive.contact import Contact
@@ -126,6 +128,7 @@ from .receive.unpin_message import UnpinMessage
 
 __all__ = [
     "About",
+    "Account",
     "AddDeviceRequest",
     "AddMembers",
     "AddStickerPackRequest",
@@ -136,6 +139,7 @@ __all__ = [
     "Attachment",
     "AttachmentData",
     "BackgroundGradient",
+    "Badge",
     "BusyMessage",
     "CallMessage",
     "ChangeGroupAdminsRequest",

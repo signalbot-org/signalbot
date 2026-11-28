@@ -35,7 +35,7 @@ class RemoteDelete(BaseMessageWithGroup):
             source_name=message_envelope.source_name,
             source_number=source.number,
             source_uuid=source.uuid,
-            timestamp=remote_delete.timestamp,
+            timestamp=remote_delete.target_timestamp,
             group_info=group_info,
         )
 

@@ -416,7 +416,10 @@ class ChatTestCase:
                 "timestamp": timestamp,
                 "expiresInSeconds": 0,
                 "viewOnce": False,
-                "remoteDelete": {"timestamp": target_sent_timestamp},
+                "remoteDelete": {
+                    "targetTimestamp": target_sent_timestamp,
+                    "timestamp": target_sent_timestamp,
+                },
             },
         )
 
@@ -539,7 +542,7 @@ class AboutMock(AsyncMock):
             build=1,
             capabilities={},
             mode="json-rpc",
-            version="0.101.0",
+            version="0.102.0",
             versions=["v1"],
         )
 
