@@ -16,7 +16,7 @@ from signalbot import (
 )
 from signalbot.errors import SignalBotError
 from signalbot.test_utils import ChatTestCase, DummyHandler
-from tests.conftest import GROUP_ID
+from tests.conftest import GROUP_ID, GROUP_INTERNAL_ID
 from tests.unit.conftest import (
     PRIVATE_NUMBER,
     PRIVATE_UUID,
@@ -27,6 +27,8 @@ from tests.unit.conftest import (
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from pytest_mock import MockerFixture
 
     from signalbot.context import DataMessageContext, ReactionContext, ReadyContext
     from signalbot.messages import DataMessage, ReceivedMessage
@@ -460,3 +462,108 @@ class TestDispatch(TestCommon):
 
         assert pipeline._q.empty()
         assert "Unknown message type" in caplog.text
+
+
+class TestPipelineStart(TestCommon):
+    async def test_start_runs_producers_and_consumers_until_stopped(
+        self,
+        mock_receive: Callable[[list[str]], None],
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+    ):
+        mock_receive(
+            [
+                ChatTestCase.new_message("Message 1"),
+                "not json, skipped",
+                ChatTestCase.new_message("Message 2"),
+            ]
+        )
+        mock_get_all_groups([fake_group])
+        pipeline = self.signal_bot._pipeline
+        handler = TrackingDataMessageHandler()
+        self.signal_bot.register(handler)
+        self.signal_bot.register(DummyHandler())
+        await pipeline.resolve_handlers()
+
+        await pipeline.start(producers=1, consumers=2)
+        assert len(pipeline._produce_tasks) == 1
+        assert len(pipeline._consume_tasks) == 2
+
+        # The mocked websocket runs dry, so the producer returns...
+        await asyncio.wait_for(asyncio.gather(*pipeline._produce_tasks), timeout=1)
+        # ...and the consumers drain the queue, then idle
+        await asyncio.wait_for(pipeline._q.join(), timeout=1)
+        assert [c.message.text for c in handler.contexts] == [
+            "Message 1",
+            "Message 2",
+        ]
+
+        consumers = list(pipeline._consume_tasks)
+        await pipeline.stop()
+        await asyncio.sleep(0)
+
+        assert all(task.cancelled() for task in consumers)
+        # finished tasks drop out of the bookkeeping sets
+        assert pipeline._produce_tasks == set()
+        assert pipeline._consume_tasks == set()
+
+    async def test_restart_cancels_the_previous_tasks(
+        self,
+        mock_receive: Callable[[list[str]], None],
+    ):
+        mock_receive([])
+        pipeline = self.signal_bot._pipeline
+
+        await pipeline.start(producers=1, consumers=1)
+        [old_consumer] = pipeline._consume_tasks
+        await pipeline.start(producers=1, consumers=1)
+
+        assert old_consumer.cancelled()
+        assert old_consumer not in pipeline._consume_tasks
+        await pipeline.stop()
+
+
+class TestProduceErrors(TestCommon):
+    async def test_receive_errors_are_raised_as_signal_bot_errors(
+        self, mocker: MockerFixture
+    ):
+        mocker.patch("websockets.connect", side_effect=OSError("connection refused"))
+
+        with pytest.raises(SignalBotError, match="Cannot receive messages"):
+            await self.signal_bot._pipeline._produce(1)
+
+
+class TestGroupUpdates(TestCommon):
+    async def test_group_update_refreshes_that_group(
+        self,
+        mocker: MockerFixture,
+        mock_receive: Callable[[list[str]], None],
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+    ):
+        mock_get_all_groups([fake_group])
+        await self.signal_bot.groups.refresh()
+        refresh_one = mocker.patch.object(
+            self.signal_bot.groups, "refresh_one", new_callable=mocker.AsyncMock
+        )
+        mock_receive(
+            [
+                ChatTestCase._received_envelope(
+                    source_uuid=PRIVATE_UUID,
+                    timestamp=1,
+                    dataMessage={
+                        "timestamp": 1,
+                        "groupInfo": {
+                            "groupId": GROUP_INTERNAL_ID,
+                            "groupName": "renamed",
+                            "revision": 2,
+                            "type": "UPDATE",
+                        },
+                    },
+                )
+            ]
+        )
+
+        await self.signal_bot._pipeline._produce(1)
+
+        refresh_one.assert_awaited_once_with(GROUP_INTERNAL_ID)

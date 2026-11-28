@@ -42,8 +42,6 @@ class EditMessage(DataMessage):
             message_envelope.sync_message is not None
             and message_envelope.sync_message.sent_message is not None
             and message_envelope.sync_message.sent_message.edit_message is not None
-            and message_envelope.sync_message.sent_message.edit_message.data_message
-            is not None
         ):
             edit_message = message_envelope.sync_message.sent_message.edit_message
             if edit_message.data_message is not None:

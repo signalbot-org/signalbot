@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import pytest
@@ -7,11 +8,13 @@ import pytest
 from signalbot import DataMessageHandler, SignalBotError
 from signalbot.groups import GroupEntry
 from signalbot.test_utils import ChatTestCase
-from tests.conftest import GROUP_ID
+from tests.conftest import GROUP_ID, GROUP_INTERNAL_ID
 from tests.unit.conftest import TestCommon
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+    from pytest_mock import MockerFixture, MockType
 
     from signalbot.context import DataMessageContext
 
@@ -93,3 +96,108 @@ class TestResolve(TestCommon):
 
         with pytest.raises(SignalBotError):
             self.signal_bot._recipients.resolve(UNKNOWN_GROUP_ID)
+
+
+SECOND_GROUP_ID = GROUP_ID[:6] + "Y" + GROUP_ID[7:]
+
+
+def _second_group(fake_group: dict, **overrides: object) -> dict:
+    return {
+        **fake_group,
+        "id": SECOND_GROUP_ID,
+        "internal_id": "second-internal-id",
+        **overrides,
+    }
+
+
+class TestContainer(TestCommon):
+    async def test_iter_len_getitem_contains(
+        self,
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+    ):
+        mock_get_all_groups([fake_group, _second_group(fake_group, name="second")])
+        groups = self.signal_bot.groups
+
+        await groups.refresh()
+
+        assert len(groups) == 2
+        assert [g.id for g in groups] == [GROUP_ID, SECOND_GROUP_ID]
+        assert groups[1].name == "second"
+        assert GROUP_INTERNAL_ID in groups
+        assert GROUP_ID not in groups  # membership is by internal id
+        assert groups.get_id(GROUP_INTERNAL_ID) == GROUP_ID
+        assert groups.get_id("unknown") is None
+
+
+class TestResolveByName(TestCommon):
+    async def test_resolve_by_internal_id_and_name(
+        self,
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+    ):
+        mock_get_all_groups([fake_group])
+        await self.signal_bot.groups.refresh()
+
+        assert self.signal_bot.groups.resolve(GROUP_INTERNAL_ID) == GROUP_ID
+        assert self.signal_bot.groups.resolve(fake_group["name"]) == GROUP_ID
+        assert self.signal_bot.groups.resolve("no such group") is None
+
+    async def test_duplicate_names_warn_and_use_the_first(
+        self,
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+        caplog: pytest.LogCaptureFixture,
+    ):
+        mock_get_all_groups([fake_group, _second_group(fake_group)])
+        await self.signal_bot.groups.refresh()
+
+        with caplog.at_level(logging.WARNING):
+            resolved = self.signal_bot.groups.resolve(fake_group["name"])
+
+        assert resolved == GROUP_ID
+        assert "more than one group named" in caplog.text
+
+
+class TestRefreshOne(TestCommon):
+    @pytest.fixture
+    def renamed(self, mocker: MockerFixture, fake_group: dict) -> MockType:
+        """Make the API return the cached test group under a new name."""
+        return mocker.patch.object(
+            self.signal_bot._signal.groups,
+            "get",
+            new_callable=mocker.AsyncMock,
+            return_value=GroupEntry.model_validate({**fake_group, "name": "renamed"}),
+        )
+
+    async def test_rename_updates_lookups(
+        self,
+        renamed: MockType,
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+    ):
+        mock_get_all_groups([fake_group])
+        groups = self.signal_bot.groups
+        await groups.refresh()
+
+        await groups.refresh_one(GROUP_INTERNAL_ID)
+
+        renamed.assert_awaited_once_with(GROUP_ID)
+        assert groups.get(GROUP_INTERNAL_ID) == renamed.return_value
+        assert groups.resolve("renamed") == GROUP_ID
+        # Regression: used to raise IndexError on the now-empty name bucket
+        assert groups.resolve(fake_group["name"]) is None
+
+    async def test_rename_keeps_other_groups_with_the_old_name(
+        self,
+        renamed: MockType,
+        mock_get_all_groups: Callable[[list[dict]], None],
+        fake_group: dict,
+    ):
+        mock_get_all_groups([fake_group, _second_group(fake_group)])
+        groups = self.signal_bot.groups
+        await groups.refresh()
+
+        await groups.refresh_one(GROUP_INTERNAL_ID)
+
+        assert groups.resolve(fake_group["name"]) == SECOND_GROUP_ID

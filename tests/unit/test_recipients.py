@@ -1,5 +1,6 @@
 import pytest
 
+from signalbot import SignalBotError
 from tests.unit.conftest import TestCommon
 
 
@@ -37,3 +38,35 @@ class TestUsernameValidation(TestCommon):
     )
     def test_invalid_username(self, username: str):
         assert not self.signal_bot._recipients._is_username(username)
+
+    @pytest.mark.parametrize(
+        "username",
+        [
+            "UserName.ab",
+            "UserName.-12",
+            "UserName.1_0",
+            "UserName. 12",
+            "UserName.١٢",  # non-ASCII digits
+            "UserName\n.12",
+            "Us\u0661.12",  # non-ASCII digit (Arabic-Indic one) in the name part
+        ],
+    )
+    def test_discriminator_must_be_ascii_digits(self, username: str):
+        assert not self.signal_bot._recipients._is_username(username)
+
+
+class TestResolve(TestCommon):
+    @pytest.mark.parametrize(
+        "recipient",
+        [
+            "+4915112345678",
+            "11111111-1111-1111-1111-111111111111",
+            "UserName.99",
+        ],
+    )
+    def test_contacts_resolve_to_themselves(self, recipient: str):
+        assert self.signal_bot._recipients.resolve(recipient) == recipient
+
+    def test_unknown_recipient_raises(self):
+        with pytest.raises(SignalBotError):
+            self.signal_bot._recipients.resolve("not a recipient")

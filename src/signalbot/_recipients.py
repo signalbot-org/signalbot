@@ -51,11 +51,9 @@ class RecipientResolver:
         else:
             return True
 
-    _USERNAME_PARTS = 2
-    _MIN_USERNAME_LENGTH = 3
-    _MAX_USERNAME_LENGTH = 32
-    _MIN_DISCRIMINATOR_DIGITS = 2
-    _MAX_DISCRIMINATOR_DIGITS = 9
+    # 3-32 ASCII letters/digits/underscores, a dot, then 2-9 ASCII digits that
+    # aren't all zeros
+    _USERNAME_PATTERN = re.compile(r"[A-Za-z0-9_]{3,32}\.(?!0+$)[0-9]{2,9}")
 
     def _is_username(self, recipient_username: str) -> bool:
         """
@@ -63,26 +61,4 @@ class RecipientResolver:
         https://support.signal.org/hc/en-us/articles/6712070553754-Phone-Number-Privacy-and-Usernames#username_req
         Additionally, cannot have more than 9 digits and the digits cannot be 00.
         """
-        split_username = recipient_username.split(".")
-        if len(split_username) != self._USERNAME_PARTS:
-            return False
-
-        characters, digits = split_username
-        min_len, max_len = self._MIN_USERNAME_LENGTH, self._MAX_USERNAME_LENGTH
-        if not min_len <= len(characters) <= max_len:
-            return False
-        if not re.match(r"^[A-Za-z\d_]+$", characters):
-            return False
-        min_digits, max_digits = (
-            self._MIN_DISCRIMINATOR_DIGITS,
-            self._MAX_DISCRIMINATOR_DIGITS,
-        )
-        if not min_digits <= len(digits) <= max_digits:
-            return False
-
-        try:
-            discriminator = int(digits)
-        except ValueError:
-            return False
-
-        return discriminator != 0
+        return self._USERNAME_PATTERN.fullmatch(recipient_username) is not None

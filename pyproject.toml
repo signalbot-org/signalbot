@@ -125,6 +125,11 @@ include = ["src/signalbot"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+filterwarnings = ["error"]
+# The suite runs on pytest-asyncio; anyio's bundled plugin is unused (and at
+# our anyio floor it imports pytest internals that warn on pytest 9.2+)
+addopts = "-p no:anyio"
 
 [tool.ruff.lint]
 select = ["ALL"]

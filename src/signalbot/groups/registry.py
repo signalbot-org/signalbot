@@ -125,7 +125,7 @@ class GroupRegistry:
 
     def _get_by_name(self, group_name: str) -> GroupEntry | None:
         groups = self._by_name.get(group_name)
-        if groups is not None:
+        if groups:
             if len(groups) > 1:
                 error_msg = f"[Bot] There is more than one group named '{group_name}',"
                 error_msg += " using the first one."
@@ -142,7 +142,4 @@ class GroupRegistry:
         ↑                                                                ↑
         prefix                                                           suffix
         """
-        if group_id is None:
-            return False
-
         return re.match(r"^group\.[a-zA-Z0-9]{59}=$", group_id) is not None

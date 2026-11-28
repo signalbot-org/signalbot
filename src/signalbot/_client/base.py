@@ -110,9 +110,8 @@ class BaseClient(Generic[UrisT]):
         self._auth = auth
         self._sessions = sessions
 
-    def _add_auth(self, headers: dict[str, str] | None = None) -> dict[str, str]:
-        if headers is None:
-            headers = {}
+    def _add_auth(self) -> dict[str, str]:
+        headers: dict[str, str] = {}
         if self._auth is not None:
             self._auth.write_header(headers)
         return headers

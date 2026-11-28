@@ -1,6 +1,7 @@
 """Tests for the `signalbot.test_utils` chat harness itself."""
 
 import asyncio
+import json
 from collections.abc import Mapping
 
 import pytest
@@ -141,6 +142,13 @@ class TestEnvelopeBuilders:
         assert message.target_sent_timestamp == 42
         assert message.timestamp == 43
 
+    async def test_remote_delete_with_explicit_timestamp(self, signal_api: SignalAPI):
+        envelope = ChatTestCase.new_remote_delete(
+            source_uuid=SENDER_UUID, target_sent_timestamp=42, timestamp=43
+        )
+
+        assert json.loads(envelope)["envelope"]["timestamp"] == 43
+
     async def test_remote_delete(self, signal_api: SignalAPI):
         envelope = ChatTestCase.new_remote_delete(
             source_uuid=SENDER_UUID, target_sent_timestamp=42
@@ -237,6 +245,11 @@ class TestSendMock(ChatTestCase):
         assert results[1].recipients == [OTHER_UUID, SENDER_UUID]
         assert results[2].edit_timestamp == first
 
+    async def test_remote_delete_explicit_return_value_wins(self):
+        remote_delete_mock = RemoteDeleteMock()
+        remote_delete_mock.return_value = "custom"
+        assert await remote_delete_mock(object()) == "custom"
+
     async def test_explicit_return_value_wins(self):
         send_mock = SendMock()
         send_mock.return_value = ["custom"]
@@ -307,3 +320,25 @@ class TestMakeBot(ChatTestCase):
     async def test_uses_custom_bot(self, mocker: MockerFixture):
         assert self.signal_bot is self.app.bot
         assert [sent.message for sent in self.send_mock.results()] == ["echo hi"]
+
+
+class ThumbsUpCommand(DataMessageHandler):
+    async def handle_data_message(self, context: DataMessageContext):
+        await context.react("👍")
+
+
+class TestReactMock(ChatTestCase):
+    @pytest.fixture(autouse=True)
+    def setup_fixture(self):
+        self.setup()
+        self.signal_bot.register(ThumbsUpCommand())
+
+    @mock_chat(
+        ChatTestCase.new_private_message("hi", source_uuid=SENDER_UUID, timestamp=5)
+    )
+    async def test_results_records_reactions(self, mocker: MockerFixture):
+        [reaction] = self.react_mock.results()
+        assert reaction.reaction == "👍"
+        assert reaction.recipient == SENDER_UUID
+        assert reaction.target_author == SENDER_UUID
+        assert reaction.timestamp == 5
