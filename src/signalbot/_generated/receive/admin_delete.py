@@ -11,3 +11,4 @@ class AdminDelete(BaseModel):
     target_author_number: str | None = Field(default=None, alias="targetAuthorNumber")
     target_author_uuid: str | None = Field(default=None, alias="targetAuthorUuid")
     target_sent_timestamp: int = Field(..., alias="targetSentTimestamp")
+    target_timestamp: int = Field(..., alias="targetTimestamp")

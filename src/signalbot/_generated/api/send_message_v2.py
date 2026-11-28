@@ -27,7 +27,9 @@ class SendMessageV2(BaseModel):
     mentions: list[MessageMention] | None = None
     message: str
     notify_self: bool | None = None
-    number: str
+    number: str = Field(
+        ..., description="Account identifier (E.164 phone number or ACI UUID)"
+    )
     quote_author: str | None = None
     quote_mentions: list[MessageMention] | None = None
     quote_message: str | None = None

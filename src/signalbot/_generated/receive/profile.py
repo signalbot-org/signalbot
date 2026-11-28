@@ -5,10 +5,13 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
+from .badge import Badge
+
 
 class Profile(BaseModel):
     about: str | None = None
     about_emoji: str | None = Field(default=None, alias="aboutEmoji")
+    badges: list[Badge] | None = None
     family_name: str | None = Field(default=None, alias="familyName")
     given_name: str | None = Field(default=None, alias="givenName")
     has_avatar: bool = Field(..., alias="hasAvatar")

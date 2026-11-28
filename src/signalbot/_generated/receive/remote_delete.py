@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RemoteDelete(BaseModel):
+    target_timestamp: int = Field(..., alias="targetTimestamp")
     timestamp: int
