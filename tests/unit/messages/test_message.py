@@ -308,6 +308,27 @@ RAW_GROUP_UPDATE_MESSAGE = envelope(
     },
 )
 
+RAW_GROUP_UPDATE_SYNC_MESSAGE = envelope(
+    timestamp=1768100104294,
+    syncMessage={
+        "sentMessage": {
+            "timestamp": 1768100104294,
+            "message": None,
+            "expiresInSeconds": 86400,
+            "viewOnce": False,
+            "groupInfo": {
+                "groupId": GROUP_ID,
+                "groupName": "<name>",
+                "revision": 101,
+                "type": "UPDATE",
+            },
+            "destination": None,
+            "destinationNumber": None,
+            "destinationUuid": None,
+        }
+    },
+)
+
 RAW_UNKNOWN_MESSAGE = envelope()
 
 
@@ -471,6 +492,14 @@ async def test_group_update(signal_api: SignalAPI):
     message = await parse(signal_api, RAW_GROUP_UPDATE_MESSAGE)
     assert isinstance(message, GroupUpdate)
     assert message.group_info.group_id == GROUP_ID
+
+
+async def test_group_update_sync_message(signal_api: SignalAPI):
+    # A group update made from one of the bot's own linked devices
+    message = await parse(signal_api, RAW_GROUP_UPDATE_SYNC_MESSAGE)
+    assert isinstance(message, GroupUpdate)
+    assert message.group_info.group_id == GROUP_ID
+    assert message.group_info.revision == 101
 
 
 async def test_attachments(signal_api: SignalAPI, mocker: MockerFixture):

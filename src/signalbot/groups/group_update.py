@@ -86,10 +86,16 @@ class GroupUpdate(BaseMessage):
 
     @staticmethod
     def message_envelope_is_group_update(message_envelope: MessageEnvelope) -> bool:
+        data_message: DataMessage | SyncDataMessage | None = (
+            message_envelope.data_message
+        )
+        if data_message is None and message_envelope.sync_message is not None:
+            # Group updates made from one of the bot's own linked devices
+            data_message = message_envelope.sync_message.sent_message
         return (
-            message_envelope.data_message is not None
-            and message_envelope.data_message.group_info is not None
-            and message_envelope.data_message.group_info.type == "UPDATE"
+            data_message is not None
+            and data_message.group_info is not None
+            and data_message.group_info.type == "UPDATE"
         )
 
     def is_group(self) -> bool:

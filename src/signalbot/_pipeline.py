@@ -338,6 +338,6 @@ class MessagePipeline:
         except Exception:
             self._logger.exception("[%s]", handler.__class__.__name__)
             raise
-
-        # done
-        self._q.task_done()
+        finally:
+            # Always mark the job done so `_q.join()` can't hang on a failed handler
+            self._q.task_done()
