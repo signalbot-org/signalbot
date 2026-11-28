@@ -37,32 +37,32 @@ redis = ["redis>=5.2.0"]
 
 [dependency-groups]
 dev = [
-  "datamodel-code-generator[ruff]>=0.72.2",
-  "prek>=0.3.0",
-  "pytest>=8.4.2",
-  "pytest-asyncio>=1.2.0",
-  "pytest-cov>=7.0.0",
-  "pytest-mock>=3.15.1",
+  "datamodel-code-generator[ruff]>=0.100.0",
+  "prek>=0.5.11",
+  "pytest>=9.2.0",
+  "pytest-asyncio>=1.5.0",
+  "pytest-cov>=7.1.0",
+  "pytest-mock>=3.17.0",
   "redis>=5.2.0",
-  "ruff>=0.16.2",
-  "tombi>=1.4.1",
-  "ty>=0.0.69",
+  "ruff>=0.17.6",
+  "tombi>=1.11.3",
+  "ty>=0.0.107",
   "yamlfix>=1.19.1",
-  "zizmor>=1.31.1",
+  "zizmor>=1.32.0",
 ]
 ci = [
-  "uv>=0.13.1",
+  "uv>=0.13.9",
 ]
 docs = [
-  "griffe-pydantic>=1.3.1",
+  "griffe-pydantic>=1.3.2",
   "mike",
-  "mkdocstrings-python>=2.0.5",
-  "ruff>=0.15.1",
-  "zensical>=0.0.53",
+  "mkdocstrings-python>=2.0.11",
+  "ruff>=0.17.6",
+  "zensical>=0.1.3",
 ]
 examples = [
   "anyio>=4.12.1",
-  "typer>=0.23.2",
+  "typer>=0.29.2",
 ]
 release = [
   "git-cliff>=2.14.2",
