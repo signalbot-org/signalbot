@@ -58,3 +58,27 @@ jobs:
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  # The lower bounds in pyproject.toml are what downstream users can end up with,
+  # while uv.lock only ever tests the newest versions. Check the bounds still work
+  # by resolving every direct dependency to its lowest allowed version on the
+  # oldest supported Python.
+  unittest-lowest:
+    name: Run unit tests with lowest direct dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884  # v10.3.0
+        with:
+          version-file: uv.lock
+
+      # Not --locked: this deliberately re-resolves away from uv.lock
+      - name: Install dependencies
+        run: uv sync --resolution lowest-direct --python 3.11 --group examples
+
+      - name: Run unit tests
+        run: uv run --no-sync pytest
